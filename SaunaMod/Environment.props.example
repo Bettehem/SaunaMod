@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Copy this file to Environment.props and set paths for your machine. -->
+    <!-- Environment.props is intentionally ignored by Git. -->
+
+    <!-- Example:
+    <VALHEIM_INSTALL>C:\Program Files (x86)\Steam\steamapps\common\Valheim</VALHEIM_INSTALL>
+    -->
+
+    <!-- Optional build deployment folder. -->
+    <!--
+    <MOD_DEPLOYPATH>$(VALHEIM_INSTALL)\BepInEx\plugins\SaunaMod</MOD_DEPLOYPATH>
+    -->
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,43 @@
+# Visual Studio
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local machine paths / developer-specific settings
+Environment.props
+
+# Build and release output
+Packages/
+*.zip
+*.nupkg
+
+# Upgrade / migration logs
+UpgradeLog*.htm
+UpgradeLog*.html
+_UpgradeReport_Files/
+
+# Old / backup source files
+*.old
+*.bak
+*~
+
+# Unity generated folders
+JotunnModStubUnity/Library/
+JotunnModStubUnity/Temp/
+JotunnModStubUnity/Logs/
+JotunnModStubUnity/obj/
+JotunnModStubUnity/UserSettings/
+
+# Never commit Valheim / Unity game assemblies copied for local development
+JotunnModStubUnity/Assets/Assemblies/
+**/Assets/Assemblies/assembly_*.dll
+**/Assets/Assemblies/*.dll
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
