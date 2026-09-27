@@ -8,6 +8,11 @@
     <VALHEIM_INSTALL>C:\Program Files (x86)\Steam\steamapps\common\Valheim</VALHEIM_INSTALL>
     -->
 
+    <!-- BepInEx installation folder -->
+    <!--
+    <BEPINEX_PATH>$(VALHEIM_INSTALL)\BepInEx</BEPINEX_PATH>
+    -->
+
     <!-- Optional build deployment folder. -->
     <!--
     <MOD_DEPLOYPATH>$(VALHEIM_INSTALL)\BepInEx\plugins\SaunaMod</MOD_DEPLOYPATH>
