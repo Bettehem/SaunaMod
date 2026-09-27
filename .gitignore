@@ -37,6 +37,9 @@ JotunnModStubUnity/Assets/Assemblies/
 **/Assets/Assemblies/assembly_*.dll
 **/Assets/Assemblies/*.dll
 
+# Package directory generated on builds
+JotunnModStub/Package/
+
 # OS files
 .DS_Store
 Thumbs.db
