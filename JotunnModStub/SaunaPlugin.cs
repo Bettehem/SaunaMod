@@ -40,6 +40,7 @@ namespace SaunaMod
         // Calm healing only while the player is physically inside sauna steam.
         // 0.5 HP/s = 30 HP/min: useful recovery, but deliberately not a combat heal.
         private static float SteamHealPerSecond = 0.5f;
+        public static float SteamDamagePerSecond = 4f;
         private static float DetectRadius = 0.6f;
         private const float SteamVfxDuration = 60f;
         private const float PlayerVfxHeight = 1.3f;
@@ -95,6 +96,7 @@ namespace SaunaMod
 
         private static SE_Stats _steaming;
         private static SE_WellSteamed _wellSteamed;
+        private static SE_Burning _tooHot;
 
         private float _checkTimer;
         private float _steamTime;

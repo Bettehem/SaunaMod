@@ -105,18 +105,33 @@ namespace SaunaMod
                     seman.AddStatusEffect(_steaming, false, 0, 0f, -1);
                 }
 
-                // Healing happens only while physically inside a real steam cloud. Heal itself clamps to max health.
-                player.Heal(SteamHealPerSecond * elapsed, false);
-
-                // The player returned to steam within the grace period, so count the short gap
-                // exactly as if contact had never been interrupted.
-                _steamTime += elapsed + _gapTime;
-                _gapTime = 0f;
-
-                if (_steamTime >= SteamTimeToBuff)
+                // Check whether player is wearing clothing/armor and apply a "Too Hot" effect on them to encourage using the sauna naked.
+                if (player.GetBodyArmor() > 0f)
                 {
-                    _steamTime = 0f;
-                    GrantWellSteamed(player, seman);
+                    if (!seman.HaveStatusEffect(_tooHot.NameHash()))
+                    {
+                        player.Message(MessageHud.MessageType.Center,
+                                _loc.TryTranslate("$msg_sauna_too_hot"));
+                        seman.AddStatusEffect(_tooHot);
+                        Player.AddDPS(SteamDamagePerSecond, player);
+                        // player.AddFireDamage(SteamDamagePerSecond * elapsed, -1);
+                    }
+                }
+                else
+                {
+                    // Healing happens only while physically inside a real steam cloud. Heal itself clamps to max health.
+                    player.Heal(SteamHealPerSecond * elapsed, false);
+
+                    // The player returned to steam within the grace period, so count the short gap
+                    // exactly as if contact had never been interrupted.
+                    _steamTime += elapsed + _gapTime;
+                    _gapTime = 0f;
+
+                    if (_steamTime >= SteamTimeToBuff)
+                    {
+                        _steamTime = 0f;
+                        GrantWellSteamed(player, seman);
+                    }
                 }
             }
             else if (_gapTime + elapsed < SteamTuning.Grace &&
@@ -128,10 +143,22 @@ namespace SaunaMod
             }
             else
             {
+                if (seman.HaveStatusEffect(_tooHot.NameHash()))
+                {
+                    seman.RemoveStatusEffect(_tooHot.NameHash(), true);
+                }
                 seman.RemoveStatusEffect(_steaming.NameHash(), true);
                 _steamTime = 0f;
                 _gapTime = 0f;
                 _timeTier = 0;   // The player stayed out of steam too long, so restart tier progression.
+            }
+
+            if (player.GetBodyArmor() == 0f)
+            {
+                if (seman.HaveStatusEffect(_tooHot.NameHash()))
+                {
+                    seman.RemoveStatusEffect(_tooHot.NameHash(), true);
+                }
             }
         }
 

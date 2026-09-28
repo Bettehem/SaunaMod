@@ -607,10 +607,11 @@ namespace SaunaMod
         {
             string dir = FindAssetDir("icons");
 
+            _tooHot.m_icon = FindIcon("Burning");
             _steaming.m_icon = LoadIcon(dir, "steaming.png") ?? FindIcon("Resting", "Rested");
             _wellSteamed.m_icon = LoadIcon(dir, "wellsteamed.png") ?? FindIcon("Rested", "Resting");
 
-            Jotunn.Logger.LogInfo($"icons: steaming={_steaming.m_icon != null}, " +
+            Jotunn.Logger.LogInfo($"icons: tooHot={_tooHot.m_icon != null}, steaming={_steaming.m_icon != null}, " +
                 $"wellSteamed={_wellSteamed.m_icon != null}");
         }
 
