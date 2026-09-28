@@ -8,6 +8,7 @@ SaunaMod adds a stone sauna stove, physical steam, progression through the **Wel
 
 - Functional sauna stove with room-filling steam
 - **Steaming** and **Well Steamed** status effects
+- **Too hot** status effect when **Steaming** with your clothes/armor on
 - Sauna whisks that improve the sauna and reduce the drawbacks of being Wet
 - Sauna bucket with ladle that increases steam output
 - Resistance mead infusion through sauna steam
