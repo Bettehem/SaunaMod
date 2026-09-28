@@ -113,8 +113,6 @@ namespace SaunaMod
                         player.Message(MessageHud.MessageType.Center,
                                 _loc.TryTranslate("$msg_sauna_too_hot"));
                         seman.AddStatusEffect(_tooHot);
-                        Player.AddDPS(SteamDamagePerSecond, player);
-                        // player.AddFireDamage(SteamDamagePerSecond * elapsed, -1);
                     }
                 }
                 else
