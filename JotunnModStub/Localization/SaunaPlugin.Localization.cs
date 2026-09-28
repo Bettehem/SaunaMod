@@ -159,9 +159,9 @@ namespace SaunaMod
                 { "piece_sauna_pour", "Heitä löylyä" },
                 { "msg_sauna_pour", "Vesi sihahtaa kuumille kiville" },
                 { "msg_sauna_notburning", "Kiuas on kylmä" },
-                { "msg_sauna_wait", "Kivet eivät ole vielä tarpeeksi kuumat" },
+                { "msg_sauna_wait", "Kivet eivät ole vielä tarpeeksi kuumia" },
                 { "msg_sauna_tier", "Lämpö painuu syvemmälle" },
-                { "msg_sauna_max_tier", "Kunnon löylyt!" },
+                { "msg_sauna_max_tier", "Nyt tuli kunnon löylyt!" },
                 { "msg_sauna_bucket_use_mead", "Kaada simaa kiuluun" },
                 { "msg_sauna_bucket_choose_mead", "Sinulla on useita vastustuskykyä antavia simoja. Tähtää kiuluun ja käytä haluamaasi pikapalkista" },
                 { "msg_sauna_bucket_no_mead", "Sinulla ei ole sopivaa vastustussimaa" },
@@ -170,10 +170,10 @@ namespace SaunaMod
                 { "msg_sauna_bucket_full", "Saunakiulussa on jo simaa" },
                 { "msg_sauna_bucket_filled", "{0} kaadettiin saunakiuluun" },
                 { "msg_sauna_mead_aroma", "Höyryssä tuoksuu {0}" },
-                { "se_sauna_steaming", "Löylyssä" },
+                { "se_sauna_steaming", "Löylyissä" },
                 { "se_sauna_steaming_tooltip", "Löyly palauttaa hiljalleen terveyttä ja karkottaa kolotukset." },
-                { "se_sauna_steaming_start", "Astut löylyyn" },
-                { "se_sauna_wellsteamed", "Läpikotaisin lämmin" },
+                { "se_sauna_steaming_start", "Astut löylyihin" },
+                { "se_sauna_wellsteamed", "Hyvin saunottu" },
                 { "se_sauna_wellsteamed_tooltip",
                   "Lämpö pysyy kehossa.\nKylmä ei tunnu missään." },
                 { "se_sauna_wellsteamed_tooltip_whisks",
@@ -182,7 +182,7 @@ namespace SaunaMod
                 { "piece_sauna_wrisks", "Koivuvihdat" },
                 { "piece_sauna_wrisks_desc", "Pari koivuvihtaa. Niillä saat kunnon löylyt, eikä märkyys enää haittaa." },
                 { "piece_sauna_bucket", "Saunakiulu ja kauha" },
-                { "piece_sauna_bucket_desc", "Sillä saat heitettyä enemmän löylyä ja voit lisätä simaa, jolloin sen tuoksu ja suojaava vaikutus kulkevat höyryn mukana." }
+                { "piece_sauna_bucket_desc", "Tällä saat heitettyä enemmän löylyä ja voit lisätä simaa, jolloin sen tuoksu ja suojaava vaikutus kulkevat höyryn mukana." }
             });
         }
     }
