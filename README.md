@@ -2,12 +2,12 @@
 
 A functional Viking sauna for Valheim, built with BepInEx and Jötunn.
 
-SaunaMod adds a stone sauna stove, physical steam, progression through the **Well Steamed** effect, sauna whisks, a bucket with ladle, resistance-mead infusions, sauna-only comfort and synchronized server configuration. The mod is designed around recovery, preparation and environmental effects rather than combat bonuses.
+SaunaMod adds a stone sauna stove, physical steam, progression through the **Well steamed** effect, sauna whisks, a bucket with ladle, resistance-mead infusions, sauna-only comfort and synchronized server configuration. The mod is designed around recovery, preparation and environmental effects rather than combat bonuses.
 
 ## Features
 
 - Functional sauna stove with room-filling steam
-- **Steaming** and **Well Steamed** status effects
+- **Steaming** and **Well steamed** status effects
 - **Too hot** status effect when **Steaming** with your clothes/armor on
 - Sauna whisks that improve the sauna and reduce the drawbacks of being Wet
 - Sauna bucket with ladle that increases steam output
