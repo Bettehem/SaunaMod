@@ -143,15 +143,10 @@ namespace SaunaMod
                 Jotunn.Logger.LogInfo(
                     $"sauna_wrisks direct visual ready: parts={visualParts}, renderers={totalRenderers}");
 
-                Sprite icon = LoadIcon(FindAssetDir("icons"), "whisks.png");
-                if (icon == null)
-                {
-                    icon = FindFirstPieceIcon(
-                        "piece_walltorch", "piece_chair", "piece_stool", "piece_table_round");
-                }
-
-                // Never let an optional icon file decide whether the build piece exists.
-                // Keep a stable fallback until the real model-rendered icon is generated in-world.
+                // Jotunn requires an icon at registration, but the real one is rendered
+                // from the model only once the world is loaded. Borrow a vanilla icon until then.
+                Sprite icon = FindFirstPieceIcon(
+                    "piece_walltorch", "piece_chair", "piece_stool", "piece_table_round");
                 _wrisksFallbackIcon = icon;
                 wrisks.Piece.m_icon = icon;
                 if (wrisks.Piece.m_icon == null)
