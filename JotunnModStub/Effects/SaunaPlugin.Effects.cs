@@ -99,6 +99,9 @@ namespace SaunaMod
             se.m_startMessage = "$" + token + "_start";
             se.m_startMessageType = MessageHud.MessageType.TopLeft;
             se.m_fireDamagePerHit = SaunaPlugin.SteamDamagePerSecond;
+
+            // Hud pulses the icon red while this flag is set, the same way as vanilla Smoked.
+            se.m_flashIcon = true;
         }
 
         private void ReadWetPenalty()
