@@ -98,6 +98,21 @@ namespace SaunaMod
                  Physics.CheckSphere(head - UnityEngine.Vector3.up * 0.5f, DetectRadius, steamMask) ||
                  Physics.CheckSphere(feet + UnityEngine.Vector3.up * 0.5f, DetectRadius, steamMask));
 
+            List<ItemDrop.ItemData> equippedItems = player.m_inventory.GetEquippedItems();
+            equippedItems.RemoveAll(item =>
+                    (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Tool ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Torch ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Utility) &&
+                    item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Shoulder
+                    );
+            bool wearingClothes = equippedItems.Count > 0;
+
             if (inSteam)
             {
                 if (!seman.HaveStatusEffect(_steaming.NameHash()))
@@ -106,7 +121,7 @@ namespace SaunaMod
                 }
 
                 // Check whether player is wearing clothing/armor and apply a "Too Hot" effect on them to encourage using the sauna naked.
-                if (player.GetBodyArmor() > 0f)
+                if (wearingClothes)
                 {
                     if (!seman.HaveStatusEffect(_tooHot.NameHash()))
                     {
@@ -151,7 +166,7 @@ namespace SaunaMod
                 _timeTier = 0;   // The player stayed out of steam too long, so restart tier progression.
             }
 
-            if (player.GetBodyArmor() == 0f)
+            if (!wearingClothes)
             {
                 if (seman.HaveStatusEffect(_tooHot.NameHash()))
                 {
