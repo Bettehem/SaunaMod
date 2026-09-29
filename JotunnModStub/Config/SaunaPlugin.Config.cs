@@ -272,21 +272,34 @@ namespace SaunaMod
 
         private static bool RecipeItemsAvailable(RequirementConfig[] requirements)
         {
-            if (requirements == null || ObjectDB.instance == null)
+            if (requirements == null)
             {
                 return true;
             }
 
             foreach (RequirementConfig requirement in requirements)
             {
-                GameObject prefab = ObjectDB.instance.GetItemPrefab(requirement.Item);
-                if (prefab == null || prefab.GetComponent<ItemDrop>() == null)
+                if (FindRecipeItem(requirement.Item) == null)
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Resolves a recipe ingredient to its ItemDrop (Piece.Requirement needs an ItemDrop).
+        /// Pieces are registered from OnVanillaPrefabsAvailable, when ObjectDB.instance already
+        /// exists but its item list is still empty, so fall back to Jotunn's prefab cache then.
+        /// </summary>
+        private static ItemDrop FindRecipeItem(string itemName)
+        {
+            GameObject prefab = ObjectDB.instance != null && ObjectDB.instance.m_items.Count > 0
+                ? ObjectDB.instance.GetItemPrefab(itemName)
+                : PrefabManager.Instance.GetPrefab(itemName);
+
+            return prefab != null ? prefab.GetComponent<ItemDrop>() : null;
         }
 
         private static RequirementConfig[] TryParseRecipeConfig(
@@ -383,7 +396,7 @@ namespace SaunaMod
             string fallbackRecipe,
             string label)
         {
-            if (prefab == null || ObjectDB.instance == null)
+            if (prefab == null)
             {
                 return;
             }
@@ -399,8 +412,7 @@ namespace SaunaMod
 
             foreach (RequirementConfig config in configs)
             {
-                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(config.Item);
-                ItemDrop itemDrop = itemPrefab != null ? itemPrefab.GetComponent<ItemDrop>() : null;
+                ItemDrop itemDrop = FindRecipeItem(config.Item);
                 if (itemDrop == null)
                 {
                     Jotunn.Logger.LogWarning(

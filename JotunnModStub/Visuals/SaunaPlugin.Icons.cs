@@ -33,6 +33,8 @@ namespace SaunaMod
                 return;
             }
 
+            // The stove is the only piece with a hand-made icon; the render below is
+            // just a fallback for when stove.png is missing. Whisks and bucket are always rendered.
             Sprite custom = _instance.LoadIcon(_instance.FindAssetDir("icons"), "stove.png");
 
             if (custom != null)

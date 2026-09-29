@@ -156,7 +156,12 @@ namespace SaunaMod
             TryPatchBucketMeadHotbarUse(harmony);
 
             PrefabManager.OnVanillaPrefabsAvailable += OnVanillaPrefabsAvailable;
-            StartCoroutine(LoadPourSound());
+            // A headless dedicated server has no audio device: clips decode empty
+            // and nobody would hear them anyway.
+            if (!GUIManager.IsHeadless())
+            {
+                StartCoroutine(LoadPourSound());
+            }
         }
 
         private void OnDestroy()

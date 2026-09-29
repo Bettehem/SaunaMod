@@ -266,17 +266,13 @@ namespace SaunaMod
                     visualRoot.AddComponent<SaunaBucketInteractionProxy>();
                 }
 
-                Sprite icon = LoadIcon(FindAssetDir("icons"), "bucket.png");
-                if (icon == null)
-                {
-                    icon = FindFirstPieceIcon(
-                        "piece_chest_wood",
-                        "piece_table_round",
-                        "piece_stool",
-                        "piece_cauldron");
-                }
-
-                bucket.Piece.m_icon = icon;
+                // Jotunn requires an icon at registration, but the real one is rendered
+                // from the model only once the world is loaded. Borrow a vanilla icon until then.
+                bucket.Piece.m_icon = FindFirstPieceIcon(
+                    "piece_chest_wood",
+                    "piece_table_round",
+                    "piece_stool",
+                    "piece_cauldron");
                 if (bucket.Piece.m_icon == null)
                 {
                     Jotunn.Logger.LogError("sauna_bucket: no icon available");
