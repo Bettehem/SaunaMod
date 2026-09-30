@@ -50,6 +50,9 @@ namespace SaunaMod
         {
             try
             {
+                _tooHot = ScriptableObject.CreateInstance<SE_Burning>();
+                InitBurnEffect(_tooHot, "SaunaTooHot", "se_sauna_too_hot", 0f);
+
                 _steaming = ScriptableObject.CreateInstance<SE_Stats>();
                 InitEffect(_steaming, "SaunaSteaming", "se_sauna_steaming", 0f);
 
@@ -58,6 +61,7 @@ namespace SaunaMod
 
                 WellSteamedHash = _wellSteamed.NameHash();
 
+                ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(_tooHot, false));
                 ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(_steaming, false));
                 ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(_wellSteamed, false));
 
@@ -83,6 +87,21 @@ namespace SaunaMod
             se.m_healthRegenMultiplier = 1f;
             se.m_staminaRegenMultiplier = 1f;
             se.m_eitrRegenMultiplier = 1f;
+        }
+
+        private void InitBurnEffect(SE_Burning se, string objectName, string token, float ttl)
+        {
+            // The hash is calculated from the object's name, not from m_name.
+            se.name = objectName;
+            se.m_name = "$" + token;
+            se.m_tooltip = "$" + token + "_tooltip";
+            se.m_ttl = ttl;
+            se.m_startMessage = "$" + token + "_start";
+            se.m_startMessageType = MessageHud.MessageType.TopLeft;
+            se.m_fireDamagePerHit = SaunaPlugin.SteamDamagePerSecond;
+
+            // Hud pulses the icon red while this flag is set, the same way as vanilla Smoked.
+            se.m_flashIcon = true;
         }
 
         private void ReadWetPenalty()

@@ -98,6 +98,21 @@ namespace SaunaMod
                  Physics.CheckSphere(head - UnityEngine.Vector3.up * 0.5f, DetectRadius, steamMask) ||
                  Physics.CheckSphere(feet + UnityEngine.Vector3.up * 0.5f, DetectRadius, steamMask));
 
+            List<ItemDrop.ItemData> equippedItems = player.m_inventory.GetEquippedItems();
+            equippedItems.RemoveAll(item =>
+                    (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Tool ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Torch ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Utility) &&
+                    item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Shoulder
+                    );
+            bool wearingClothes = equippedItems.Count > 0;
+
             if (inSteam)
             {
                 if (!seman.HaveStatusEffect(_steaming.NameHash()))
@@ -105,18 +120,31 @@ namespace SaunaMod
                     seman.AddStatusEffect(_steaming, false, 0, 0f, -1);
                 }
 
-                // Healing happens only while physically inside a real steam cloud. Heal itself clamps to max health.
-                player.Heal(SteamHealPerSecond * elapsed, false);
-
-                // The player returned to steam within the grace period, so count the short gap
-                // exactly as if contact had never been interrupted.
-                _steamTime += elapsed + _gapTime;
-                _gapTime = 0f;
-
-                if (_steamTime >= SteamTimeToBuff)
+                // Check whether player is wearing clothing/armor and apply a "Too Hot" effect on them to encourage using the sauna naked.
+                if (wearingClothes)
                 {
-                    _steamTime = 0f;
-                    GrantWellSteamed(player, seman);
+                    if (!seman.HaveStatusEffect(_tooHot.NameHash()))
+                    {
+                        player.Message(MessageHud.MessageType.Center,
+                                _loc.TryTranslate("$msg_sauna_too_hot"));
+                        seman.AddStatusEffect(_tooHot);
+                    }
+                }
+                else
+                {
+                    // Healing happens only while physically inside a real steam cloud. Heal itself clamps to max health.
+                    player.Heal(SteamHealPerSecond * elapsed, false);
+
+                    // The player returned to steam within the grace period, so count the short gap
+                    // exactly as if contact had never been interrupted.
+                    _steamTime += elapsed + _gapTime;
+                    _gapTime = 0f;
+
+                    if (_steamTime >= SteamTimeToBuff)
+                    {
+                        _steamTime = 0f;
+                        GrantWellSteamed(player, seman);
+                    }
                 }
             }
             else if (_gapTime + elapsed < SteamTuning.Grace &&
@@ -128,10 +156,22 @@ namespace SaunaMod
             }
             else
             {
+                if (seman.HaveStatusEffect(_tooHot.NameHash()))
+                {
+                    seman.RemoveStatusEffect(_tooHot.NameHash(), true);
+                }
                 seman.RemoveStatusEffect(_steaming.NameHash(), true);
                 _steamTime = 0f;
                 _gapTime = 0f;
                 _timeTier = 0;   // The player stayed out of steam too long, so restart tier progression.
+            }
+
+            if (!wearingClothes)
+            {
+                if (seman.HaveStatusEffect(_tooHot.NameHash()))
+                {
+                    seman.RemoveStatusEffect(_tooHot.NameHash(), true);
+                }
             }
         }
 
