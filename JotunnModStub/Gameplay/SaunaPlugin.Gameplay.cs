@@ -32,6 +32,7 @@ namespace SaunaMod
                 _gapTime = 0f;
                 _timeTier = 0;
                 _worldReady = false;
+                ResetSkinRedness();
                 return;
             }
 
@@ -83,6 +84,8 @@ namespace SaunaMod
             _checkTimer = 0f;
 
             SEMan seman = player.GetSEMan();
+
+            UpdateSkinRedness(player, seman, elapsed);
 
             int steamMask = 1 << SteamLayer;
             UnityEngine.Vector3 head = player.GetTopPoint();
@@ -229,12 +232,8 @@ namespace SaunaMod
                 }
             }
 
-            // Without whisks the player can earn only the 5- and 10-minute tiers.
-            // Whisks (SaunaTier 2+) unlock the third 15-minute tier.
             // Never shorten an already earned active 15-minute effect.
-            int maxEarnableTimeTier = currentSaunaTier >= 2
-                ? WellSteamedTimeTiers.Length
-                : Mathf.Min(2, WellSteamedTimeTiers.Length);
+            int maxEarnableTimeTier = MaxEarnableTimeTier(currentSaunaTier);
 
             _timeTier = Mathf.Max(
                 reached,

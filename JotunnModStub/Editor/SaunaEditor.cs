@@ -60,6 +60,7 @@ namespace SaunaMod
             SaunaPlugin.RefreshBucketLiquidVisuals();
             SaunaPlugin.RefreshBucketIcon();
         };
+        private static readonly Action RefreshSkinRedness = () => SaunaPlugin.ApplySkinRedness(Player.m_localPlayer);
 
         private static readonly Section[] Sections =
         {
@@ -183,6 +184,20 @@ namespace SaunaMod
                     new Entry { Name = "steam.CloudsGenerated.WithBucket",    Get = () => SteamTuning.CloudsPerPourWithBucket, Set = v => SteamTuning.CloudsPerPourWithBucket = Mathf.Max(1, (int)v), Step = 1f, Integer = true },
                     new Entry { Name = "steam.MaxClouds",     Get = () => SteamTuning.MaxClouds,     Set = v => SteamTuning.MaxClouds = (int)v,     Step = 10f, Integer = true },
                     new Entry { Name = "steam.Grace",         Get = () => SteamTuning.Grace,         Set = v => SteamTuning.Grace = v,              Step = 0.5f }
+                }
+            },
+            new Section
+            {
+                Name = "Skin Redness",
+                Entries = new[]
+                {
+                    new Entry { Name = "skinredness.Strength",    Get = () => SkinRednessTuning.Strength,    Set = v => SkinRednessTuning.Strength = Mathf.Clamp01(v),    Step = 0.05f, Changed = RefreshSkinRedness },
+                    new Entry { Name = "skinredness.Tint.R",      Get = () => SkinRednessTuning.TintR,       Set = v => SkinRednessTuning.TintR = Mathf.Min(2f, v),       Step = 0.05f, Changed = RefreshSkinRedness },
+                    new Entry { Name = "skinredness.Tint.G",      Get = () => SkinRednessTuning.TintG,       Set = v => SkinRednessTuning.TintG = Mathf.Min(2f, v),       Step = 0.05f, Changed = RefreshSkinRedness },
+                    new Entry { Name = "skinredness.Tint.B",      Get = () => SkinRednessTuning.TintB,       Set = v => SkinRednessTuning.TintB = Mathf.Min(2f, v),       Step = 0.05f, Changed = RefreshSkinRedness },
+                    new Entry { Name = "skinredness.CoolSeconds", Get = () => SkinRednessTuning.CoolSeconds, Set = v => SkinRednessTuning.CoolSeconds = Mathf.Max(1f, v), Step = 5f },
+                    // 0 = real sauna heat; 1 = show full redness to tune the color.
+                    new Entry { Name = "skinredness.Preview",     Get = () => SkinRednessTuning.Preview,     Set = v => SkinRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshSkinRedness }
                 }
             },
             new Section
