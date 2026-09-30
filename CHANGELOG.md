@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0
+
+* Added the **Too hot** status effect: steaming with clothes or armor on deals damage and blocks steam healing and Well steamed progress
+* Skin now gradually reddens while steaming and cools back afterwards
+* Fixed sauna piece recipes not being applied at startup
+* Improved Finnish translations
+
 ## 2.0.1
 
 * Mod description changed

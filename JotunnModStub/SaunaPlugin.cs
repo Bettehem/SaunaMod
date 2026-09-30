@@ -23,7 +23,7 @@ namespace SaunaMod
     {
         public const string PluginGUID = "nikita.valheim.sauna";
         public const string PluginName = "SaunaMod";
-        public const string PluginVersion = "2.0.1";
+        public const string PluginVersion = "2.1.0";
         private const string ConfigFileName = "nekitker.saunamod.cfg";
 
         private const string DefaultStoveRecipe = "Wood:10,Coal:5,Stone:40";
