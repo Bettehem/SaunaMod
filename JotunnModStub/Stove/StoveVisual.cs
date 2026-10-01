@@ -60,6 +60,16 @@ namespace SaunaMod
         public static float FloorRadius = 0.56f;
         public static float FloorOffsetY = -0.06f;
 
+        // ---- heat bands ----
+        // Dome and floor are combined with one submesh per band, so each band can be tinted
+        // separately by stone heat. Weight 1 = reddens fully, 0 = never reddens.
+        // Each array matches the submeshes of the mesh built last.
+        public const int FloorHeatRings = 4;
+        public static float[] DomeBandWeights = new float[0];
+        public static float[] FloorBandWeights = new float[0];
+
+        private static readonly Dictionary<Material, Material> _heatMaterials = new Dictionary<Material, Material>();
+
         // ---- hot stones inside ----
         public static int LavaIndex = 0;
         public static float LavaSize = 0.24f;
@@ -312,7 +322,10 @@ namespace SaunaMod
 
             float baseScale = StoneSize / meshMax;
 
-            List<CombineInstance> parts = new List<CombineInstance>();
+            // One band per layer, so every layer can get its own heat color.
+            List<List<CombineInstance>> bands = new List<List<CombineInstance>>();
+            List<float> bandWeights = new List<float>();
+            int stoneCount = 0;
 
             // Fixed random seed so the stove looks identical for every player.
             UnityEngine.Random.State saved = UnityEngine.Random.state;
@@ -324,6 +337,11 @@ namespace SaunaMod
             for (int layer = 0; layer < layers; layer++)
             {
                 float t = layers > 1 ? (float)layer / (layers - 1) : 0f;
+
+                // Heat rises: the top layer reddens fully, the bottom layer not at all.
+                List<CombineInstance> parts = new List<CombineInstance>();
+                bands.Add(parts);
+                bandWeights.Add(t);
                 float radius = Mathf.Lerp(BaseRadius, TopRadius, t);
                 float y = Height * t;
 
@@ -364,28 +382,24 @@ namespace SaunaMod
                         UnityEngine.Vector3.one * baseScale * jitter);
 
                     parts.Add(ci);
+                    stoneCount++;
                 }
             }
 
             UnityEngine.Random.state = saved;
 
-            if (parts.Count == 0)
+            Mesh combined = CombineBands("sauna_dome", bands, bandWeights, out DomeBandWeights);
+            if (combined == null)
             {
                 return null;
             }
 
-            Mesh combined = new Mesh();
-            combined.name = "sauna_dome";
-            combined.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            combined.CombineMeshes(parts.ToArray(), true, true);
-            combined.RecalculateBounds();
-
             _domeMesh = combined;
-            _domeMaterials = srcMaterials;
+            _domeMaterials = HeatMaterials(srcMaterials[0], DomeBandWeights.Length);
             materials = _domeMaterials;
 
-            Jotunn.Logger.LogInfo($"dome mesh: {parts.Count} stones, {combined.vertexCount} verts, " +
-                $"source={source.name}");
+            Jotunn.Logger.LogInfo($"dome mesh: {stoneCount} stones in {DomeBandWeights.Length} heat bands, " +
+                $"{combined.vertexCount} verts, source={source.name}");
 
             return _domeMesh;
         }
@@ -418,7 +432,17 @@ namespace SaunaMod
             }
 
             float baseScale = FloorStoneSize / meshMax;
-            List<CombineInstance> parts = new List<CombineInstance>();
+
+            // Rings from the center outwards: the center under the fire reddens fully,
+            // the outer ring not at all.
+            int ringCount = Mathf.Max(2, FloorHeatRings);
+            List<List<CombineInstance>> bands = new List<List<CombineInstance>>();
+            List<float> bandWeights = new List<float>();
+            for (int r = 0; r < ringCount; r++)
+            {
+                bands.Add(new List<CombineInstance>());
+                bandWeights.Add(1f - (float)r / (ringCount - 1));
+            }
 
             UnityEngine.Random.State saved = UnityEngine.Random.state;
             UnityEngine.Random.InitState(Seed + 333);
@@ -452,27 +476,25 @@ namespace SaunaMod
                 ci.transform = UnityEngine.Matrix4x4.TRS(
                     pos, rot, UnityEngine.Vector3.one * baseScale * jitter);
 
-                parts.Add(ci);
+                int ring = Mathf.Min(ringCount - 1,
+                    Mathf.FloorToInt(radius / Mathf.Max(0.01f, FloorRadius) * ringCount));
+                bands[ring].Add(ci);
             }
 
             UnityEngine.Random.state = saved;
 
-            if (parts.Count == 0)
+            Mesh combined = CombineBands("sauna_floor", bands, bandWeights, out FloorBandWeights);
+            if (combined == null)
             {
                 return null;
             }
 
-            Mesh combined = new Mesh();
-            combined.name = "sauna_floor";
-            combined.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            combined.CombineMeshes(parts.ToArray(), true, true);
-            combined.RecalculateBounds();
-
             _floorMesh = combined;
-            _floorMaterials = srcMaterials;
+            _floorMaterials = HeatMaterials(srcMaterials[0], FloorBandWeights.Length);
             materials = _floorMaterials;
 
-            Jotunn.Logger.LogInfo($"floor mesh: {parts.Count} stones, source={source.name}");
+            Jotunn.Logger.LogInfo($"floor mesh: {FloorCount} stones in {FloorBandWeights.Length} heat bands, " +
+                $"source={source.name}");
 
             return _floorMesh;
         }
@@ -637,6 +659,81 @@ namespace SaunaMod
             Jotunn.Logger.LogInfo($"lava mesh: {parts.Count} stones, source={source.name}");
 
             return _lavaMesh;
+        }
+
+        /// Merges every band into one submesh. Empty bands are skipped together with their weights.
+        private static Mesh CombineBands(string name, List<List<CombineInstance>> bands,
+            List<float> bandWeights, out float[] weights)
+        {
+            List<CombineInstance> merged = new List<CombineInstance>();
+            List<float> used = new List<float>();
+
+            for (int i = 0; i < bands.Count; i++)
+            {
+                if (bands[i].Count == 0)
+                {
+                    continue;
+                }
+
+                Mesh band = new Mesh();
+                band.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                band.CombineMeshes(bands[i].ToArray(), true, true);
+
+                merged.Add(new CombineInstance { mesh = band, transform = UnityEngine.Matrix4x4.identity });
+                used.Add(bandWeights[i]);
+            }
+
+            weights = used.ToArray();
+
+            if (merged.Count == 0)
+            {
+                return null;
+            }
+
+            Mesh combined = new Mesh();
+            combined.name = name;
+            combined.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            combined.CombineMeshes(merged.ToArray(), false, false);
+            combined.RecalculateBounds();
+
+            foreach (CombineInstance ci in merged)
+            {
+                UnityEngine.Object.Destroy(ci.mesh);
+            }
+
+            return combined;
+        }
+
+        /// One material slot per band. All slots share one copy of the stone material
+        /// with emission switched on (black by default), so the glow can be driven per band
+        /// through MaterialPropertyBlocks without touching the vanilla material.
+        private static Material[] HeatMaterials(Material source, int count)
+        {
+            Material heat;
+            if (!_heatMaterials.TryGetValue(source, out heat) || heat == null)
+            {
+                heat = new Material(source);
+                heat.name = source.name + "_sauna_heat";
+
+                if (heat.HasProperty("_EmissionColor"))
+                {
+                    heat.EnableKeyword("_EMISSION");
+                    heat.SetColor("_EmissionColor", Color.black);
+                }
+
+                _heatMaterials[source] = heat;
+
+                Jotunn.Logger.LogInfo($"stone heat material: shader={source.shader.name}, " +
+                    $"color={heat.HasProperty("_Color")}, emission={heat.HasProperty("_EmissionColor")}");
+            }
+
+            Material[] materials = new Material[count];
+            for (int i = 0; i < count; i++)
+            {
+                materials[i] = heat;
+            }
+
+            return materials;
         }
 
         public static void Build(Transform parent)

@@ -60,6 +60,7 @@ namespace SaunaMod
                 }
 
                 fireplace.m_disableCoverCheck = true;
+                StoveTuning.ApplyFuel(fireplace);
 
                 // Keep the visual and Fireplace from fire_pit_iron, but use placement and durability rules
                 // from the vanilla stone pile.

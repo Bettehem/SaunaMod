@@ -84,6 +84,10 @@ namespace SaunaMod
         private ConfigEntry<int> _cfgCloudsPerPourWithBucket;
         private ConfigEntry<int> _cfgMaxClouds;
 
+        private ConfigEntry<int> _cfgStoveMaxWood;
+        private ConfigEntry<StoveTuning.HeatingSpeed> _cfgStoveHeatingSpeed;
+        private ConfigEntry<StoneRednessTuning.StoveGlow> _cfgStoveGlow;
+
         public static int WellSteamedHash;
 
         private static GameObject _prefabContainer;

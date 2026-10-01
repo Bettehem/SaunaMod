@@ -51,7 +51,32 @@ namespace SaunaMod
                 "EnableSaunaComfort",
                 true,
                 SyncedConfigDescription(
-                    "Enables conditional sauna comfort. Whisks and bucket each add +1 comfort only near a burning sauna stove while sheltered."));
+                    "Enables conditional sauna comfort. Whisks and bucket each add +1 comfort only near a sauna stove with hot stones while sheltered."));
+
+            _cfgStoveMaxWood = _saunaConfig.Bind(
+                "Stove",
+                "MaxWood",
+                5,
+                SyncedConfigDescription(
+                    "How much wood the sauna stove holds. One piece burns for 60 seconds.",
+                    new AcceptableValueRange<int>(1, 50)));
+
+            _cfgStoveHeatingSpeed = _saunaConfig.Bind(
+                "Stove",
+                "HeatingSpeed",
+                StoveTuning.HeatingSpeed.Standard,
+                SyncedConfigDescription(
+                    "How the stove stones heat up and spend heat. " +
+                    "Standard: 0 to 100 heat in 5 minutes, a pour costs 20, cooling 15 per minute. " +
+                    "Fast: 0 to 100 heat in 3 min 20 s, a pour costs 15, cooling 10 per minute."));
+
+            // Purely visual, so every player picks it locally instead of following the server.
+            _cfgStoveGlow = _saunaConfig.Bind(
+                "Stove",
+                "Glow",
+                StoneRednessTuning.StoveGlow.Standard,
+                "How brightly the hot stove stones redden, glow and light the sauna. " +
+                "Dim halves redness, glow and light brightness. This setting is local and not synchronized.");
 
             _cfgStoveRecipe = _saunaConfig.Bind(
                 "Recipes",
@@ -256,6 +281,12 @@ namespace SaunaMod
             SteamTuning.CloudsPerPour = Mathf.Max(1, _cfgCloudsPerPour.Value);
             SteamTuning.CloudsPerPourWithBucket = Mathf.Max(1, _cfgCloudsPerPourWithBucket.Value);
             SteamTuning.MaxClouds = Mathf.Max(10, _cfgMaxClouds.Value);
+
+            StoveTuning.MaxFuel = Mathf.Max(1, _cfgStoveMaxWood.Value);
+            StoveTuning.ApplyHeatingSpeed(_cfgStoveHeatingSpeed.Value);
+            StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);
+            SaunaStove.ApplyFuelToAll();
+            SaunaStove.RefreshStoneHeatAll();
         }
 
         /// <summary>

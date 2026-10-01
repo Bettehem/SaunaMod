@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+A stone heat update for the sauna stove.
+
+* The stove now holds 5 wood; each piece burns for 60 seconds
+* Added **stone heat** from 0 to 100: the stones heat up while the stove burns (0 to 100 in 5 minutes) and slowly cool down after the fire goes out
+* Steam now comes from the heat in the stones: every pour spends 20 heat, and below 50 heat the stones are too cold to pour on, even if the stove is still burning. Hot stones can still be poured on after the fire has gone out
+* The pour cooldown is reduced from 12 to 5 seconds
+* Whisk and bucket comfort now depends on the stone heat instead of the fire, so it no longer disappears while the sauna is still steaming
+* Hot stones redden and glow: the top of the dome and the center of the floor get the hottest, the bottom stays dark. The stones also softly light the sauna, even after the fire has gone out
+* The stove hover text shows the current stone heat
+* New config options in the `Stove` section: `MaxWood`, `HeatingSpeed` (Standard / Fast) and `Glow` (Standard / Dim, local setting)
+* New localized messages for cold stones and the pour cooldown
+* The in-game editor's stove section now tunes fuel, stone heat, pours and stone glow instead of stove geometry
+
 ## 2.1.0
 
 * Added the **Too hot** status effect: steaming with clothes or armor on deals damage and blocks steam healing and Well steamed progress

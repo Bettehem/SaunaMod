@@ -20,11 +20,12 @@ namespace SaunaMod
     {
         public const string RpcName = "SaunaMod_Pour";
         public const string ZdoLastPour = "sauna_lastpour";
+        public const string ZdoHeat = "sauna_heat";
+        public const string ZdoHeatTime = "sauna_heat_time";
 
         public static GameObject SteamPrefab;
         public static AudioClip PourClip;
 
-        public const float PourCooldown = 12f;
         public const float BurstDuration = 3f;
         public const float BurstRadius = 0.7f;
         public const float BurstHeight = 0.5f;
@@ -35,12 +36,28 @@ namespace SaunaMod
         private Fireplace m_fireplace;
         private ZNetView m_nview;
         private AudioSource m_audio;
-        private float m_localLastPour = -999f;
 
         private Transform m_hotStones;
         private Transform m_coldStones;
         private bool m_wasHot;
         private float m_heatTimer;
+
+        // The first update waits one second so that Fireplace has already caught up
+        // the fuel it burned while the area was unloaded.
+        private float m_stoneHeatTimer = 1f;
+
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
+
+        private MeshRenderer m_domeRenderer;
+        private MeshRenderer m_floorRenderer;
+        private MaterialPropertyBlock m_stoneBlock;
+        private Light m_glowLight;
+
+        // Heat shown on the stones. It eases toward the real heat, so a pour fades
+        // the red over a moment instead of snapping. Negative = not shown yet.
+        private float m_displayHeat = -1f;
+        private float m_shownHeat = -1f;
         private float m_burstLeft;
         private float m_spawnAccum;
         private int m_burstCloudCount = 20;
@@ -78,8 +95,11 @@ namespace SaunaMod
                 m_fireplace.m_smokeSpawner.enabled = false;
             }
 
+            StoveTuning.ApplyFuel(m_fireplace);
+
             CacheFireRoots();
             SetupAudio();
+            SetupGlowLight();
             RefreshVisual();
         }
 
@@ -170,6 +190,114 @@ namespace SaunaMod
             m_hotStones = transform.Find(StoveVisual.LavaName);
             m_coldStones = transform.Find(StoveVisual.CoalName);
             ApplyHeat(IsHot(), true);
+
+            m_domeRenderer = FindRenderer(StoveVisual.DomeName);
+            m_floorRenderer = FindRenderer(StoveVisual.FloorName);
+            m_shownHeat = -1f;
+        }
+
+        private MeshRenderer FindRenderer(string name)
+        {
+            Transform t = transform.Find(name);
+            return t != null ? t.GetComponent<MeshRenderer>() : null;
+        }
+
+        /// Editor: re-tint every stove after a redness or glow setting changed.
+        public static void RefreshStoneHeatAll()
+        {
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove != null)
+                {
+                    stove.m_shownHeat = -1f;
+                }
+            }
+        }
+
+        private void SetupGlowLight()
+        {
+            GameObject go = new GameObject("sauna_stone_glow");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = UnityEngine.Vector3.up * 0.6f;
+
+            m_glowLight = go.AddComponent<Light>();
+            m_glowLight.type = LightType.Point;
+            m_glowLight.color = StoneRednessTuning.LightColor;
+            m_glowLight.shadows = LightShadows.None;
+            m_glowLight.intensity = 0f;
+            m_glowLight.enabled = false;
+        }
+
+        private void UpdateStoneVisual()
+        {
+            float target = SaunaEditor.Active && StoneRednessTuning.Preview > 0
+                ? StoveTuning.MaxHeat
+                : GetHeat();
+
+            m_displayHeat = m_displayHeat < 0f
+                ? target
+                : Mathf.MoveTowards(m_displayHeat, target, 40f * Time.deltaTime);
+
+            if (m_shownHeat >= 0f && Mathf.Abs(m_displayHeat - m_shownHeat) < 0.2f)
+            {
+                return;
+            }
+
+            m_shownHeat = m_displayHeat;
+            float heat01 = Mathf.Clamp01(m_displayHeat / StoveTuning.MaxHeat);
+
+            TintStones(m_domeRenderer, StoveVisual.DomeBandWeights, heat01, 1f);
+            TintStones(m_floorRenderer, StoveVisual.FloorBandWeights, heat01, StoneRednessTuning.FloorGlowBoost);
+
+            if (m_glowLight != null)
+            {
+                float intensity = StoneRednessTuning.LightIntensity * heat01;
+                m_glowLight.intensity = intensity;
+                m_glowLight.range = StoneRednessTuning.LightRange;
+                m_glowLight.enabled = intensity > 0.01f;
+            }
+        }
+
+        /// Each material slot of the dome/floor is one heat band; its weight scales the redness.
+        private void TintStones(MeshRenderer renderer, float[] weights, float heat01, float glowScale)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            if (m_stoneBlock == null)
+            {
+                m_stoneBlock = new MaterialPropertyBlock();
+            }
+
+            Material[] materials = renderer.sharedMaterials;
+            int count = Mathf.Min(materials.Length, weights.Length);
+
+            for (int i = 0; i < count; i++)
+            {
+                Material material = materials[i];
+                if (material == null)
+                {
+                    continue;
+                }
+
+                float redness = weights[i] * heat01;
+                m_stoneBlock.Clear();
+
+                if (material.HasProperty(ColorId))
+                {
+                    m_stoneBlock.SetColor(ColorId,
+                        StoneRednessTuning.Apply(material.GetColor(ColorId), redness));
+                }
+
+                if (material.HasProperty(EmissionId))
+                {
+                    m_stoneBlock.SetColor(EmissionId, StoneRednessTuning.Emission(redness) * glowScale);
+                }
+
+                renderer.SetPropertyBlock(m_stoneBlock, i);
+            }
         }
 
         private bool IsHot()
@@ -309,7 +437,8 @@ namespace SaunaMod
         }
 
         /// Returns the comfort bonus from sauna accessories around the nearest active sauna stove.
-        /// Whisks and bucket each contribute +1, but only while the player is near a burning sauna stove.
+        /// Whisks and bucket each contribute +1, but only while the player is near a stove
+        /// whose stones are at least StoveTuning.ComfortMinHeat hot.
         /// Accessories must also be genuinely placed and linked to that stove by the normal 5 m sauna link rule.
         public static int GetSaunaComfortBonusNear(UnityEngine.Vector3 position)
         {
@@ -319,7 +448,7 @@ namespace SaunaMod
 
             foreach (SaunaStove stove in s_all)
             {
-                if (stove == null || !stove.IsHot())
+                if (stove == null || stove.GetHeat() < StoveTuning.ComfortMinHeat)
                 {
                     continue;
                 }
@@ -417,6 +546,102 @@ namespace SaunaMod
 
             nearest.m_fireplace.SetFuel(0f);
             Jotunn.Logger.LogInfo("extinguish: stove fuel set to 0");
+        }
+
+        /// Editor tool: set the stone heat of the nearest sauna stove.
+        public static void SetHeatNearest(UnityEngine.Vector3 position, float heat)
+        {
+            SaunaStove nearest = null;
+            float best = 20f * 20f;
+
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove == null || stove.m_nview == null || !stove.m_nview.IsValid())
+                {
+                    continue;
+                }
+
+                float d = (stove.transform.position - position).sqrMagnitude;
+                if (d < best)
+                {
+                    best = d;
+                    nearest = stove;
+                }
+            }
+
+            if (nearest == null)
+            {
+                Jotunn.Logger.LogInfo("set heat: no sauna stove within 20 m");
+                return;
+            }
+
+            if (!nearest.m_nview.IsOwner())
+            {
+                nearest.m_nview.ClaimOwnership();
+            }
+
+            // Restart the heat clock so the next update does not apply time from before the override.
+            ZDO zdo = nearest.m_nview.GetZDO();
+            zdo.Set(ZdoHeatTime, HeatClockTicks());
+            zdo.Set(ZdoHeat, Mathf.Clamp(heat, 0f, StoveTuning.MaxHeat));
+            Jotunn.Logger.LogInfo($"set heat: stove heat set to {heat:0}");
+        }
+
+        /// Editor: push the current fuel rules to every placed stove.
+        public static void ApplyFuelToAll()
+        {
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove != null)
+                {
+                    StoveTuning.ApplyFuel(stove.m_fireplace);
+                }
+            }
+        }
+
+        /// Stone heat from 0 to StoveTuning.MaxHeat, as last written by the owner.
+        public float GetHeat()
+        {
+            if (m_nview == null || !m_nview.IsValid())
+            {
+                return 0f;
+            }
+
+            return m_nview.GetZDO().GetFloat(ZdoHeat, 0f);
+        }
+
+        private static long HeatClockTicks()
+        {
+            return ZNet.instance != null ? ZNet.instance.GetTime().Ticks : DateTime.Now.Ticks;
+        }
+
+        /// Owner only: advance the stone heat by the time passed since the last update.
+        /// Elapsed time is measured on the network clock and stored in the ZDO, so the heat
+        /// also catches up after the area was unloaded or ownership changed hands.
+        private void UpdateStoneHeat()
+        {
+            if (m_fireplace == null || m_nview == null || !m_nview.IsValid() || !m_nview.IsOwner())
+            {
+                return;
+            }
+
+            ZDO zdo = m_nview.GetZDO();
+            long now = HeatClockTicks();
+            long last = zdo.GetLong(ZdoHeatTime, 0L);
+            zdo.Set(ZdoHeatTime, now);
+
+            if (last <= 0L || now <= last)
+            {
+                return;
+            }
+
+            float minutes = (float)((now - last) / (double)TimeSpan.TicksPerMinute);
+            float rate = m_fireplace.IsBurning()
+                ? StoveTuning.HeatPerMinute
+                : -StoveTuning.CoolPerMinute;
+
+            float heat = zdo.GetFloat(ZdoHeat, 0f);
+            zdo.Set(ZdoHeat, Mathf.Clamp(heat + rate * minutes, 0f, StoveTuning.MaxHeat));
         }
 
         private void ApplyFire()
@@ -537,16 +762,46 @@ namespace SaunaMod
 
         public bool Pour(Humanoid user)
         {
-            if (m_fireplace == null || !m_fireplace.IsBurning())
+            // Placement ghosts have no ZDO, so they have neither heat nor a pour cooldown.
+            if (m_fireplace == null || m_nview == null || !m_nview.IsValid())
+            {
+                return false;
+            }
+
+            // Steam comes from the heat stored in the stones, not from the fire itself:
+            // a stove that has just gone out can still be poured on while the stones are hot.
+            if (GetHeat() < StoveTuning.MinPourHeat)
             {
                 if (user != null)
                 {
-                    user.Message(MessageHud.MessageType.Center, "$msg_sauna_notburning");
+                    user.Message(MessageHud.MessageType.Center, "$msg_sauna_cold_stones");
                 }
                 return false;
             }
 
-            bool networked = m_nview != null && m_nview.IsValid();
+            double now = NetTime();
+            float last = m_nview.GetZDO().GetFloat(ZdoLastPour, -9999f);
+
+            if (now - last < StoveTuning.PourCooldown)
+            {
+                if (user != null)
+                {
+                    user.Message(MessageHud.MessageType.Center, "$msg_sauna_wait");
+                }
+                return false;
+            }
+
+            if (!m_nview.IsOwner())
+            {
+                m_nview.ClaimOwnership();
+            }
+
+            // Bring the heat up to date as the new owner before spending it.
+            UpdateStoneHeat();
+
+            ZDO zdo = m_nview.GetZDO();
+            zdo.Set(ZdoHeat, Mathf.Max(0f, zdo.GetFloat(ZdoHeat, 0f) - StoveTuning.PourHeatCost));
+            zdo.Set(ZdoLastPour, (float)now);
 
             // The bucket increases the amount of steam per pour, not cloud speed or TTL.
             int saunaTier = GetWellSteamedSaunaTier();
@@ -554,42 +809,7 @@ namespace SaunaMod
                 ? SteamTuning.CloudsPerPourWithBucket
                 : SteamTuning.CloudsPerPour;
 
-            if (networked)
-            {
-                double now = NetTime();
-                float last = m_nview.GetZDO().GetFloat(ZdoLastPour, -9999f);
-
-                if (now - last < PourCooldown)
-                {
-                    if (user != null)
-                    {
-                        user.Message(MessageHud.MessageType.Center, "$msg_sauna_wait");
-                    }
-                    return false;
-                }
-
-                if (!m_nview.IsOwner())
-                {
-                    m_nview.ClaimOwnership();
-                }
-
-                m_nview.GetZDO().Set(ZdoLastPour, (float)now);
-                m_nview.InvokeRPC(ZNetView.Everybody, RpcName, cloudCount);
-            }
-            else
-            {
-                if (Time.time - m_localLastPour < PourCooldown)
-                {
-                    if (user != null)
-                    {
-                        user.Message(MessageHud.MessageType.Center, "$msg_sauna_wait");
-                    }
-                    return false;
-                }
-
-                m_localLastPour = Time.time;
-                StartBurst(cloudCount);
-            }
+            m_nview.InvokeRPC(ZNetView.Everybody, RpcName, cloudCount);
 
             // An infused bucket is consumed only by a SUCCESSFUL pour
             // and only when the sauna is truly Tier 3 (stove + whisks + bucket).
@@ -644,6 +864,15 @@ namespace SaunaMod
                 m_heatTimer = 0.5f;
                 ApplyHeat(IsHot(), false);
             }
+
+            m_stoneHeatTimer -= Time.deltaTime;
+            if (m_stoneHeatTimer <= 0f)
+            {
+                m_stoneHeatTimer = 1f;
+                UpdateStoneHeat();
+            }
+
+            UpdateStoneVisual();
 
             if (m_burstLeft <= 0f || SteamPrefab == null)
             {

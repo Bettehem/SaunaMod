@@ -45,14 +45,8 @@ namespace SaunaMod
             public Entry[] Entries;
         }
 
-        private static readonly Action RefreshStoveModelAndIcon = () =>
-        {
-            StoveVisual.Invalidate();
-            SaunaStove.RebuildAll();
-            SaunaPlugin.RefreshPieceIcon();
-        };
-
-        private static readonly Action RefreshStoveIcon = () => SaunaPlugin.RefreshPieceIcon();
+        private static readonly Action RefreshStoveFuel = () => SaunaStove.ApplyFuelToAll();
+        private static readonly Action RefreshStoneHeat = () => SaunaStove.RefreshStoneHeatAll();
         private static readonly Action RefreshWrisksIcon = () => SaunaPlugin.RefreshWrisksIcon();
         private static readonly Action RefreshBucketIcon = () => SaunaPlugin.RefreshBucketIcon();
         private static readonly Action RefreshBucketLiquidsAndIcon = () =>
@@ -69,41 +63,34 @@ namespace SaunaMod
                 Name = "Sauna Stove",
                 Entries = new[]
                 {
-                    new Entry { Name = "dome.StoneIndex",    Get = () => StoveVisual.StoneIndex,    Set = v => StoveVisual.StoneIndex = (int)v,    Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.StoneSize",     Get = () => StoveVisual.StoneSize,     Set = v => StoveVisual.StoneSize = v,          Step = 0.02f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.BaseRadius",    Get = () => StoveVisual.BaseRadius,    Set = v => StoveVisual.BaseRadius = v,         Step = 0.05f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.TopRadius",     Get = () => StoveVisual.TopRadius,     Set = v => StoveVisual.TopRadius = v,          Step = 0.02f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.Height",        Get = () => StoveVisual.Height,        Set = v => StoveVisual.Height = v,             Step = 0.05f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.Layers",        Get = () => StoveVisual.Layers,        Set = v => StoveVisual.Layers = (int)v,        Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.CountBase",     Get = () => StoveVisual.CountBase,     Set = v => StoveVisual.CountBase = (int)v,     Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.OpeningWidth",  Get = () => StoveVisual.OpeningWidth,  Set = v => StoveVisual.OpeningWidth = v,       Step = 5f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.OpeningLayers", Get = () => StoveVisual.OpeningLayers, Set = v => StoveVisual.OpeningLayers = (int)v, Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.SizeJitter",    Get = () => StoveVisual.SizeJitter,    Set = v => StoveVisual.SizeJitter = v,         Step = 0.05f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.Tilt",          Get = () => StoveVisual.Tilt,          Set = v => StoveVisual.Tilt = v,               Step = 5f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "dome.Seed",          Get = () => StoveVisual.Seed,          Set = v => StoveVisual.Seed = (int)v,          Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
+                    new Entry { Name = "fuel.MaxWood",          Get = () => StoveTuning.MaxFuel,         Set = v => StoveTuning.MaxFuel = Mathf.Max(1, (int)v),       Step = 1f,  Integer = true, Changed = RefreshStoveFuel },
+                    new Entry { Name = "fuel.SecondsPerWood",   Get = () => StoveTuning.SecPerFuel,      Set = v => StoveTuning.SecPerFuel = Mathf.Max(1f, v),        Step = 5f,  Changed = RefreshStoveFuel },
 
-                    new Entry { Name = "floor.StoneSize",    Get = () => StoveVisual.FloorStoneSize, Set = v => StoveVisual.FloorStoneSize = v,      Step = 0.02f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "floor.Count",        Get = () => StoveVisual.FloorCount,     Set = v => StoveVisual.FloorCount = (int)v,    Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "floor.Radius",       Get = () => StoveVisual.FloorRadius,    Set = v => StoveVisual.FloorRadius = v,         Step = 0.02f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "floor.OffsetY",      Get = () => StoveVisual.FloorOffsetY,   Set = v => StoveVisual.FloorOffsetY = v,        Step = 0.02f, AllowNegative = true, Changed = RefreshStoveModelAndIcon },
+                    new Entry { Name = "heat.HeatPerMinute",    Get = () => StoveTuning.HeatPerMinute,   Set = v => StoveTuning.HeatPerMinute = v,                    Step = 1f },
+                    new Entry { Name = "heat.CoolPerMinute",    Get = () => StoveTuning.CoolPerMinute,   Set = v => StoveTuning.CoolPerMinute = v,                    Step = 1f },
+                    new Entry { Name = "heat.PourCost",         Get = () => StoveTuning.PourHeatCost,    Set = v => StoveTuning.PourHeatCost = v,                     Step = 1f },
+                    new Entry { Name = "heat.MinToPour",        Get = () => StoveTuning.MinPourHeat,     Set = v => StoveTuning.MinPourHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
+                    // 0 = hidden; 1 = show the stone heat when hovering over the stove.
+                    new Entry { Name = "heat.ShowOnHover",      Get = () => StoveTuning.ShowHeatOnHover, Set = v => StoveTuning.ShowHeatOnHover = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true },
 
-                    new Entry { Name = "lava.Index",         Get = () => StoveVisual.LavaIndex,      Set = v => StoveVisual.LavaIndex = (int)v,      Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "lava.Size",          Get = () => StoveVisual.LavaSize,       Set = v => StoveVisual.LavaSize = v,            Step = 0.02f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "lava.Count",         Get = () => StoveVisual.LavaCount,      Set = v => StoveVisual.LavaCount = (int)v,      Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "lava.Radius",        Get = () => StoveVisual.LavaRadius,     Set = v => StoveVisual.LavaRadius = v,          Step = 0.02f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "lava.OffsetY",       Get = () => StoveVisual.LavaOffsetY,    Set = v => StoveVisual.LavaOffsetY = v,         Step = 0.02f, AllowNegative = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "coal.Size",          Get = () => StoveVisual.CoalSize,       Set = v => StoveVisual.CoalSize = v,            Step = 0.02f, Changed = RefreshStoveModelAndIcon },
+                    new Entry { Name = "heat.ComfortMinHeat",   Get = () => StoveTuning.ComfortMinHeat,  Set = v => StoveTuning.ComfortMinHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
 
-                    new Entry { Name = "fire.OffsetY",       Get = () => StoveVisual.FireOffsetY,    Set = v => StoveVisual.FireOffsetY = v,         Step = 0.05f, AllowNegative = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "fire.Scale",         Get = () => StoveVisual.FireScale,      Set = v => StoveVisual.FireScale = v,           Step = 0.05f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "fire.FlameSize",     Get = () => StoveVisual.FlameSize,      Set = v => StoveVisual.FlameSize = v,           Step = 0.05f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "fire.FlameOffsetY",  Get = () => StoveVisual.FlameOffsetY,   Set = v => StoveVisual.FlameOffsetY = v,        Step = 0.02f, AllowNegative = true, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "fire.WarmthRadius",  Get = () => StoveVisual.WarmthRadius,   Set = v => StoveVisual.WarmthRadius = v,        Step = 0.5f, Changed = RefreshStoveModelAndIcon },
-                    new Entry { Name = "fire.FlameSet",      Get = () => StoveVisual.FlameSet,       Set = v => StoveVisual.FlameSet = (int)v,       Step = 1f,    Integer = true, Changed = RefreshStoveModelAndIcon },
+                    new Entry { Name = "pour.Cooldown",         Get = () => StoveTuning.PourCooldown,    Set = v => StoveTuning.PourCooldown = v,                     Step = 0.5f },
 
-                    new Entry { Name = "icon.Yaw",           Get = () => StoveVisual.IconYaw,        Set = v => StoveVisual.IconYaw = v,             Step = 5f, AllowNegative = true, Changed = RefreshStoveIcon },
-                    new Entry { Name = "icon.Pitch",         Get = () => StoveVisual.IconPitch,      Set = v => StoveVisual.IconPitch = v,           Step = 5f, AllowNegative = true, Changed = RefreshStoveIcon },
-                    new Entry { Name = "icon.Flame",         Get = () => StoveVisual.IconFlame,      Set = v => StoveVisual.IconFlame = (int)v,      Step = 1f, Integer = true, Changed = RefreshStoveIcon }
+                    new Entry { Name = "stones.MaxRedness",     Get = () => StoneRednessTuning.Strength,       Set = v => StoneRednessTuning.Strength = Mathf.Clamp01(v),   Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.Glow",           Get = () => StoneRednessTuning.Glow,           Set = v => StoneRednessTuning.Glow = v,                      Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.LightIntensity", Get = () => StoneRednessTuning.LightIntensity, Set = v => StoneRednessTuning.LightIntensity = v,            Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.LightRange",     Get = () => StoneRednessTuning.LightRange,     Set = v => StoneRednessTuning.LightRange = v,                Step = 0.25f, Changed = RefreshStoneHeat },
+                    // 0 = real stone heat; 1 = show the stones at 100 heat to tune the color.
+                    new Entry { Name = "stones.Preview",        Get = () => StoneRednessTuning.Preview,        Set = v => StoneRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshStoneHeat },
+
+                    new Entry { Name = "TEST Stones heat = 100", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () =>
+                    {
+                        if (Player.m_localPlayer != null)
+                        {
+                            SaunaStove.SetHeatNearest(Player.m_localPlayer.transform.position, StoveTuning.MaxHeat);
+                        }
+                    } }
                 }
             },
             new Section
@@ -192,9 +179,6 @@ namespace SaunaMod
                 Entries = new[]
                 {
                     new Entry { Name = "skinredness.Strength",    Get = () => SkinRednessTuning.Strength,    Set = v => SkinRednessTuning.Strength = Mathf.Clamp01(v),    Step = 0.05f, Changed = RefreshSkinRedness },
-                    new Entry { Name = "skinredness.Tint.R",      Get = () => SkinRednessTuning.TintR,       Set = v => SkinRednessTuning.TintR = Mathf.Min(2f, v),       Step = 0.05f, Changed = RefreshSkinRedness },
-                    new Entry { Name = "skinredness.Tint.G",      Get = () => SkinRednessTuning.TintG,       Set = v => SkinRednessTuning.TintG = Mathf.Min(2f, v),       Step = 0.05f, Changed = RefreshSkinRedness },
-                    new Entry { Name = "skinredness.Tint.B",      Get = () => SkinRednessTuning.TintB,       Set = v => SkinRednessTuning.TintB = Mathf.Min(2f, v),       Step = 0.05f, Changed = RefreshSkinRedness },
                     new Entry { Name = "skinredness.CoolSeconds", Get = () => SkinRednessTuning.CoolSeconds, Set = v => SkinRednessTuning.CoolSeconds = Mathf.Max(1f, v), Step = 5f },
                     // 0 = real sauna heat; 1 = show full redness to tune the color.
                     new Entry { Name = "skinredness.Preview",     Get = () => SkinRednessTuning.Preview,     Set = v => SkinRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshSkinRedness }
