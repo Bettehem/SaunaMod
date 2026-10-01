@@ -107,6 +107,7 @@ namespace SaunaMod
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft ||
+                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Bow ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Torch ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo ||
