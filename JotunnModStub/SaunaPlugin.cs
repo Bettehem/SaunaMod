@@ -86,6 +86,7 @@ namespace SaunaMod
 
         private ConfigEntry<int> _cfgStoveMaxWood;
         private ConfigEntry<StoveTuning.HeatingSpeed> _cfgStoveHeatingSpeed;
+        private ConfigEntry<bool> _cfgStoveSteamDependsOnHeat;
         private ConfigEntry<StoneRednessTuning.StoveGlow> _cfgStoveGlow;
 
         public static int WellSteamedHash;

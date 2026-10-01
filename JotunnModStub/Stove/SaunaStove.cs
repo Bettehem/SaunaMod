@@ -800,14 +800,17 @@ namespace SaunaMod
             UpdateStoneHeat();
 
             ZDO zdo = m_nview.GetZDO();
-            zdo.Set(ZdoHeat, Mathf.Max(0f, zdo.GetFloat(ZdoHeat, 0f) - StoveTuning.PourHeatCost));
+            float heat = zdo.GetFloat(ZdoHeat, 0f);
+            zdo.Set(ZdoHeat, Mathf.Max(0f, heat - StoveTuning.PourHeatCost));
             zdo.Set(ZdoLastPour, (float)now);
 
             // The bucket increases the amount of steam per pour, not cloud speed or TTL.
+            // Cooler stones give less steam, measured by the heat before this pour.
             int saunaTier = GetWellSteamedSaunaTier();
             int cloudCount = saunaTier >= 3
                 ? SteamTuning.CloudsPerPourWithBucket
                 : SteamTuning.CloudsPerPour;
+            cloudCount = Mathf.Max(1, Mathf.RoundToInt(cloudCount * StoveTuning.SteamFactor(heat)));
 
             m_nview.InvokeRPC(ZNetView.Everybody, RpcName, cloudCount);
 

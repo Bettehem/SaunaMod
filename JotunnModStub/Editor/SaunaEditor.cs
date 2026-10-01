@@ -75,6 +75,8 @@ namespace SaunaMod
 
                     new Entry { Name = "heat.ComfortMinHeat",   Get = () => StoveTuning.ComfortMinHeat,  Set = v => StoveTuning.ComfortMinHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
 
+                    // Share of the steam a pour gives at 0 heat; at 100 heat it is always the full amount.
+                    new Entry { Name = "pour.SteamAtZeroHeat",  Get = () => StoveTuning.SteamAtZeroHeat, Set = v => StoveTuning.SteamAtZeroHeat = Mathf.Clamp01(v), Step = 0.05f },
                     new Entry { Name = "pour.Cooldown",         Get = () => StoveTuning.PourCooldown,    Set = v => StoveTuning.PourCooldown = v,                     Step = 0.5f },
 
                     new Entry { Name = "stones.MaxRedness",     Get = () => StoneRednessTuning.Strength,       Set = v => StoneRednessTuning.Strength = Mathf.Clamp01(v),   Step = 0.05f, Changed = RefreshStoneHeat },

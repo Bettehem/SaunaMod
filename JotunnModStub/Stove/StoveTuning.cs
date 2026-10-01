@@ -44,6 +44,24 @@ namespace SaunaMod
         /// 1 = append the stone heat to the stove hover text.
         public static int ShowHeatOnHover = 1;
 
+        /// When false (cfg Stove.SteamDependsOnHeat), every pour gives the full amount of steam.
+        public static bool SteamDependsOnHeat = true;
+
+        /// Share of the steam a pour gives at 0 heat. Steam scales linearly from this
+        /// at 0 heat up to the full cloud count at MaxHeat.
+        public static float SteamAtZeroHeat = 0.5f;
+
+        /// Multiplier for the cloud count of a pour made at the given stone heat.
+        public static float SteamFactor(float heat)
+        {
+            if (!SteamDependsOnHeat)
+            {
+                return 1f;
+            }
+
+            return Mathf.Lerp(Mathf.Clamp01(SteamAtZeroHeat), 1f, Mathf.Clamp01(heat / MaxHeat));
+        }
+
         public enum HeatingSpeed
         {
             Standard,
