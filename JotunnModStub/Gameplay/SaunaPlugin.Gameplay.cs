@@ -18,6 +18,8 @@ namespace SaunaMod
 {
     internal partial class SaunaPlugin
     {
+        private bool TooHotWeapons = true;
+
         private void Update()
         {
             if (_steaming == null || _wellSteamed == null)
@@ -104,16 +106,21 @@ namespace SaunaMod
             List<ItemDrop.ItemData> equippedItems = player.m_inventory.GetEquippedItems();
             equippedItems.RemoveAll(item =>
                     (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Tool ||
-                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon ||
-                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
-                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft ||
-                    item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Torch ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket ||
                     item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Utility) &&
                     item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Shoulder
                     );
+            if (!TooHotWeapons) {
+                equippedItems.RemoveAll(item =>
+                        item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon ||
+                        item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
+                        item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft ||
+                        item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Bow ||
+                        item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield
+                        );
+            }
             bool wearingClothes = equippedItems.Count > 0;
 
             if (inSteam)
@@ -128,8 +135,12 @@ namespace SaunaMod
                 {
                     if (!seman.HaveStatusEffect(_tooHot.NameHash()))
                     {
+                        var msg = "$msg_sauna_too_hot";
+                        if (TooHotWeapons) {
+                            msg = "$msg_sauna_too_hot_weapons";
+                        }
                         player.Message(MessageHud.MessageType.Center,
-                                _loc.TryTranslate("$msg_sauna_too_hot"));
+                                _loc.TryTranslate(msg));
                         seman.AddStatusEffect(_tooHot);
                     }
                 }
