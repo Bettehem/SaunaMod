@@ -29,6 +29,7 @@ namespace SaunaMod
         private class Entry
         {
             public string Name;
+            public string Hint;
             public Func<float> Get;
             public Action<float> Set;
             public float Step;
@@ -63,30 +64,30 @@ namespace SaunaMod
                 Name = "Sauna Stove",
                 Entries = new[]
                 {
-                    new Entry { Name = "fuel.MaxWood",          Get = () => StoveTuning.MaxFuel,         Set = v => StoveTuning.MaxFuel = Mathf.Max(1, (int)v),       Step = 1f,  Integer = true, Changed = RefreshStoveFuel },
-                    new Entry { Name = "fuel.SecondsPerWood",   Get = () => StoveTuning.SecPerFuel,      Set = v => StoveTuning.SecPerFuel = Mathf.Max(1f, v),        Step = 5f,  Changed = RefreshStoveFuel },
+                    new Entry { Name = "fuel.MaxWood", Hint = "How much wood the stove holds",          Get = () => StoveTuning.MaxFuel,         Set = v => StoveTuning.MaxFuel = Mathf.Max(1, (int)v),       Step = 1f,  Integer = true, Changed = RefreshStoveFuel },
+                    new Entry { Name = "fuel.SecondsPerWood", Hint = "Seconds one piece of wood burns",   Get = () => StoveTuning.SecPerFuel,      Set = v => StoveTuning.SecPerFuel = Mathf.Max(1f, v),        Step = 5f,  Changed = RefreshStoveFuel },
 
-                    new Entry { Name = "heat.HeatPerMinute",    Get = () => StoveTuning.HeatPerMinute,   Set = v => StoveTuning.HeatPerMinute = v,                    Step = 1f },
-                    new Entry { Name = "heat.CoolPerMinute",    Get = () => StoveTuning.CoolPerMinute,   Set = v => StoveTuning.CoolPerMinute = v,                    Step = 1f },
-                    new Entry { Name = "heat.PourCost",         Get = () => StoveTuning.PourHeatCost,    Set = v => StoveTuning.PourHeatCost = v,                     Step = 1f },
-                    new Entry { Name = "heat.MinToPour",        Get = () => StoveTuning.MinPourHeat,     Set = v => StoveTuning.MinPourHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
+                    new Entry { Name = "heat.HeatPerMinute", Hint = "Stone heat gained per minute while burning",    Get = () => StoveTuning.HeatPerMinute,   Set = v => StoveTuning.HeatPerMinute = v,                    Step = 1f },
+                    new Entry { Name = "heat.CoolPerMinute", Hint = "Stone heat lost per minute without fire",    Get = () => StoveTuning.CoolPerMinute,   Set = v => StoveTuning.CoolPerMinute = v,                    Step = 1f },
+                    new Entry { Name = "heat.PourCost", Hint = "Heat spent by one pour",         Get = () => StoveTuning.PourHeatCost,    Set = v => StoveTuning.PourHeatCost = v,                     Step = 1f },
+                    new Entry { Name = "heat.MinToPour", Hint = "Below this heat pouring is not possible",        Get = () => StoveTuning.MinPourHeat,     Set = v => StoveTuning.MinPourHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
                     // 0 = hidden; 1 = show the stone heat when hovering over the stove.
-                    new Entry { Name = "heat.ShowOnHover",      Get = () => StoveTuning.ShowHeatOnHover, Set = v => StoveTuning.ShowHeatOnHover = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true },
+                    new Entry { Name = "heat.ShowOnHover", Hint = "1 = show stone heat in the stove hover text",      Get = () => StoveTuning.ShowHeatOnHover, Set = v => StoveTuning.ShowHeatOnHover = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true },
 
-                    new Entry { Name = "heat.ComfortMinHeat",   Get = () => StoveTuning.ComfortMinHeat,  Set = v => StoveTuning.ComfortMinHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
+                    new Entry { Name = "heat.ComfortMinHeat", Hint = "Whisks and bucket give comfort from this heat",   Get = () => StoveTuning.ComfortMinHeat,  Set = v => StoveTuning.ComfortMinHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
 
                     // Share of the steam a pour gives at 0 heat; at 100 heat it is always the full amount.
-                    new Entry { Name = "pour.SteamAtZeroHeat",  Get = () => StoveTuning.SteamAtZeroHeat, Set = v => StoveTuning.SteamAtZeroHeat = Mathf.Clamp01(v), Step = 0.05f },
-                    new Entry { Name = "pour.Cooldown",         Get = () => StoveTuning.PourCooldown,    Set = v => StoveTuning.PourCooldown = v,                     Step = 0.5f },
+                    new Entry { Name = "pour.SteamAtZeroHeat", Hint = "Share of steam at 0 heat (full steam at 100)",  Get = () => StoveTuning.SteamAtZeroHeat, Set = v => StoveTuning.SteamAtZeroHeat = Mathf.Clamp01(v), Step = 0.05f },
+                    new Entry { Name = "pour.Cooldown", Hint = "Seconds between pours",         Get = () => StoveTuning.PourCooldown,    Set = v => StoveTuning.PourCooldown = v,                     Step = 0.5f },
 
-                    new Entry { Name = "stones.MaxRedness",     Get = () => StoneRednessTuning.Strength,       Set = v => StoneRednessTuning.Strength = Mathf.Clamp01(v),   Step = 0.05f, Changed = RefreshStoneHeat },
-                    new Entry { Name = "stones.Glow",           Get = () => StoneRednessTuning.Glow,           Set = v => StoneRednessTuning.Glow = v,                      Step = 0.05f, Changed = RefreshStoneHeat },
-                    new Entry { Name = "stones.LightIntensity", Get = () => StoneRednessTuning.LightIntensity, Set = v => StoneRednessTuning.LightIntensity = v,            Step = 0.05f, Changed = RefreshStoneHeat },
-                    new Entry { Name = "stones.LightRange",     Get = () => StoneRednessTuning.LightRange,     Set = v => StoneRednessTuning.LightRange = v,                Step = 0.25f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.MaxRedness", Hint = "Redness of the hottest stones at 100 heat",     Get = () => StoneRednessTuning.Strength,       Set = v => StoneRednessTuning.Strength = Mathf.Clamp01(v),   Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.Glow", Hint = "Self-glow of the stones at 100 heat",           Get = () => StoneRednessTuning.Glow,           Set = v => StoneRednessTuning.Glow = v,                      Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.LightIntensity", Hint = "Brightness of the stone light at 100 heat", Get = () => StoneRednessTuning.LightIntensity, Set = v => StoneRednessTuning.LightIntensity = v,            Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.LightRange", Hint = "Range of the stone light, m",     Get = () => StoneRednessTuning.LightRange,     Set = v => StoneRednessTuning.LightRange = v,                Step = 0.25f, Changed = RefreshStoneHeat },
                     // 0 = real stone heat; 1 = show the stones at 100 heat to tune the color.
-                    new Entry { Name = "stones.Preview",        Get = () => StoneRednessTuning.Preview,        Set = v => StoneRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.Preview", Hint = "1 = show the stones as at 100 heat",        Get = () => StoneRednessTuning.Preview,        Set = v => StoneRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshStoneHeat },
 
-                    new Entry { Name = "TEST Stones heat = 100", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () =>
+                    new Entry { Name = "TEST Stones heat = 100", Hint = "Set nearest stove heat to 100 (within 20 m)", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () =>
                     {
                         if (Player.m_localPlayer != null)
                         {
@@ -100,13 +101,13 @@ namespace SaunaMod
                 Name = "Sauna Whisks",
                 Entries = new[]
                 {
-                    new Entry { Name = "wrisks.icon.Yaw",      Get = () => SaunaPieceIconTuning.WrisksYaw,      Set = v => SaunaPieceIconTuning.WrisksYaw = v,      Step = 5f, AllowNegative = true, Changed = RefreshWrisksIcon },
-                    new Entry { Name = "wrisks.icon.Pitch",    Get = () => SaunaPieceIconTuning.WrisksPitch,    Set = v => SaunaPieceIconTuning.WrisksPitch = v,    Step = 5f, AllowNegative = true, Changed = RefreshWrisksIcon },
-                    new Entry { Name = "wrisks.icon.Roll",     Get = () => SaunaPieceIconTuning.WrisksRoll,     Set = v => SaunaPieceIconTuning.WrisksRoll = v,     Step = 5f, AllowNegative = true, Changed = RefreshWrisksIcon },
-                    new Entry { Name = "wrisks.icon.OffsetX",  Get = () => SaunaPieceIconTuning.WrisksOffsetX,  Set = v => SaunaPieceIconTuning.WrisksOffsetX = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshWrisksIcon },
-                    new Entry { Name = "wrisks.icon.OffsetY",  Get = () => SaunaPieceIconTuning.WrisksOffsetY,  Set = v => SaunaPieceIconTuning.WrisksOffsetY = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshWrisksIcon },
-                    new Entry { Name = "wrisks.icon.Distance", Get = () => SaunaPieceIconTuning.WrisksDistance, Set = v => SaunaPieceIconTuning.WrisksDistance = v, Step = 0.10f, AllowNegative = true, Changed = RefreshWrisksIcon },
-                    new Entry { Name = "wrisks.icon.Scale",    Get = () => SaunaPieceIconTuning.WrisksScale,    Set = v => SaunaPieceIconTuning.WrisksScale = Mathf.Max(0.05f, v), Step = 0.05f, Changed = RefreshWrisksIcon }
+                    new Entry { Name = "wrisks.icon.Yaw", Hint = "Whisks icon: turn around vertical axis",      Get = () => SaunaPieceIconTuning.WrisksYaw,      Set = v => SaunaPieceIconTuning.WrisksYaw = v,      Step = 5f, AllowNegative = true, Changed = RefreshWrisksIcon },
+                    new Entry { Name = "wrisks.icon.Pitch", Hint = "Whisks icon: tilt forward/back",    Get = () => SaunaPieceIconTuning.WrisksPitch,    Set = v => SaunaPieceIconTuning.WrisksPitch = v,    Step = 5f, AllowNegative = true, Changed = RefreshWrisksIcon },
+                    new Entry { Name = "wrisks.icon.Roll", Hint = "Whisks icon: roll",     Get = () => SaunaPieceIconTuning.WrisksRoll,     Set = v => SaunaPieceIconTuning.WrisksRoll = v,     Step = 5f, AllowNegative = true, Changed = RefreshWrisksIcon },
+                    new Entry { Name = "wrisks.icon.OffsetX", Hint = "Whisks icon: horizontal shift",  Get = () => SaunaPieceIconTuning.WrisksOffsetX,  Set = v => SaunaPieceIconTuning.WrisksOffsetX = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshWrisksIcon },
+                    new Entry { Name = "wrisks.icon.OffsetY", Hint = "Whisks icon: vertical shift",  Get = () => SaunaPieceIconTuning.WrisksOffsetY,  Set = v => SaunaPieceIconTuning.WrisksOffsetY = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshWrisksIcon },
+                    new Entry { Name = "wrisks.icon.Distance", Hint = "Whisks icon: camera distance", Get = () => SaunaPieceIconTuning.WrisksDistance, Set = v => SaunaPieceIconTuning.WrisksDistance = v, Step = 0.10f, AllowNegative = true, Changed = RefreshWrisksIcon },
+                    new Entry { Name = "wrisks.icon.Scale", Hint = "Whisks icon: scale",    Get = () => SaunaPieceIconTuning.WrisksScale,    Set = v => SaunaPieceIconTuning.WrisksScale = Mathf.Max(0.05f, v), Step = 0.05f, Changed = RefreshWrisksIcon }
                 }
             },
             new Section
@@ -114,37 +115,37 @@ namespace SaunaMod
                 Name = "Bucket",
                 Entries = new[]
                 {
-                    new Entry { Name = "bucket.icon.Yaw",      Get = () => SaunaPieceIconTuning.BucketYaw,      Set = v => SaunaPieceIconTuning.BucketYaw = v,      Step = 5f, AllowNegative = true, Changed = RefreshBucketIcon },
-                    new Entry { Name = "bucket.icon.Pitch",    Get = () => SaunaPieceIconTuning.BucketPitch,    Set = v => SaunaPieceIconTuning.BucketPitch = v,    Step = 5f, AllowNegative = true, Changed = RefreshBucketIcon },
-                    new Entry { Name = "bucket.icon.Roll",     Get = () => SaunaPieceIconTuning.BucketRoll,     Set = v => SaunaPieceIconTuning.BucketRoll = v,     Step = 5f, AllowNegative = true, Changed = RefreshBucketIcon },
-                    new Entry { Name = "bucket.icon.OffsetX",  Get = () => SaunaPieceIconTuning.BucketOffsetX,  Set = v => SaunaPieceIconTuning.BucketOffsetX = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshBucketIcon },
-                    new Entry { Name = "bucket.icon.OffsetY",  Get = () => SaunaPieceIconTuning.BucketOffsetY,  Set = v => SaunaPieceIconTuning.BucketOffsetY = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshBucketIcon },
-                    new Entry { Name = "bucket.icon.Distance", Get = () => SaunaPieceIconTuning.BucketDistance, Set = v => SaunaPieceIconTuning.BucketDistance = v, Step = 0.10f, AllowNegative = true, Changed = RefreshBucketIcon },
-                    new Entry { Name = "bucket.icon.Scale",    Get = () => SaunaPieceIconTuning.BucketScale,    Set = v => SaunaPieceIconTuning.BucketScale = Mathf.Max(0.05f, v), Step = 0.05f, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.Yaw", Hint = "Bucket icon: turn around vertical axis",      Get = () => SaunaPieceIconTuning.BucketYaw,      Set = v => SaunaPieceIconTuning.BucketYaw = v,      Step = 5f, AllowNegative = true, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.Pitch", Hint = "Bucket icon: tilt forward/back",    Get = () => SaunaPieceIconTuning.BucketPitch,    Set = v => SaunaPieceIconTuning.BucketPitch = v,    Step = 5f, AllowNegative = true, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.Roll", Hint = "Bucket icon: roll",     Get = () => SaunaPieceIconTuning.BucketRoll,     Set = v => SaunaPieceIconTuning.BucketRoll = v,     Step = 5f, AllowNegative = true, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.OffsetX", Hint = "Bucket icon: horizontal shift",  Get = () => SaunaPieceIconTuning.BucketOffsetX,  Set = v => SaunaPieceIconTuning.BucketOffsetX = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.OffsetY", Hint = "Bucket icon: vertical shift",  Get = () => SaunaPieceIconTuning.BucketOffsetY,  Set = v => SaunaPieceIconTuning.BucketOffsetY = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.Distance", Hint = "Bucket icon: camera distance", Get = () => SaunaPieceIconTuning.BucketDistance, Set = v => SaunaPieceIconTuning.BucketDistance = v, Step = 0.10f, AllowNegative = true, Changed = RefreshBucketIcon },
+                    new Entry { Name = "bucket.icon.Scale", Hint = "Bucket icon: scale",    Get = () => SaunaPieceIconTuning.BucketScale,    Set = v => SaunaPieceIconTuning.BucketScale = Mathf.Max(0.05f, v), Step = 0.05f, Changed = RefreshBucketIcon },
 
                     // 0 = normal bucket with water and an empty mug;
                     // 1/2/3 = visual preview of the corresponding mead.
-                    new Entry { Name = "bucket.liquid.Preview", Get = () => SaunaBucketLiquidTuning.Preview, Set = v => SaunaBucketLiquidTuning.Preview = Mathf.Clamp((int)v, 0, 3), Step = 1f, Integer = true, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.liquid.Preview", Hint = "0 = water, 1 poison, 2 frost, 3 fire (preview)", Get = () => SaunaBucketLiquidTuning.Preview, Set = v => SaunaBucketLiquidTuning.Preview = Mathf.Clamp((int)v, 0, 3), Step = 1f, Integer = true, Changed = RefreshBucketLiquidsAndIcon },
 
-                    new Entry { Name = "bucket.water.R", Get = () => SaunaBucketLiquidTuning.WaterR, Set = v => SaunaBucketLiquidTuning.WaterR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.water.G", Get = () => SaunaBucketLiquidTuning.WaterG, Set = v => SaunaBucketLiquidTuning.WaterG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.water.B", Get = () => SaunaBucketLiquidTuning.WaterB, Set = v => SaunaBucketLiquidTuning.WaterB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.water.A", Get = () => SaunaBucketLiquidTuning.WaterA, Set = v => SaunaBucketLiquidTuning.WaterA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.water.R", Hint = "Water color: red", Get = () => SaunaBucketLiquidTuning.WaterR, Set = v => SaunaBucketLiquidTuning.WaterR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.water.G", Hint = "Water color: green", Get = () => SaunaBucketLiquidTuning.WaterG, Set = v => SaunaBucketLiquidTuning.WaterG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.water.B", Hint = "Water color: blue", Get = () => SaunaBucketLiquidTuning.WaterB, Set = v => SaunaBucketLiquidTuning.WaterB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.water.A", Hint = "Water color: opacity", Get = () => SaunaBucketLiquidTuning.WaterA, Set = v => SaunaBucketLiquidTuning.WaterA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
 
-                    new Entry { Name = "bucket.poison.R", Get = () => SaunaBucketLiquidTuning.PoisonR, Set = v => SaunaBucketLiquidTuning.PoisonR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.poison.G", Get = () => SaunaBucketLiquidTuning.PoisonG, Set = v => SaunaBucketLiquidTuning.PoisonG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.poison.B", Get = () => SaunaBucketLiquidTuning.PoisonB, Set = v => SaunaBucketLiquidTuning.PoisonB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.poison.A", Get = () => SaunaBucketLiquidTuning.PoisonA, Set = v => SaunaBucketLiquidTuning.PoisonA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.poison.R", Hint = "Poison mead: red", Get = () => SaunaBucketLiquidTuning.PoisonR, Set = v => SaunaBucketLiquidTuning.PoisonR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.poison.G", Hint = "Poison mead: green", Get = () => SaunaBucketLiquidTuning.PoisonG, Set = v => SaunaBucketLiquidTuning.PoisonG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.poison.B", Hint = "Poison mead: blue", Get = () => SaunaBucketLiquidTuning.PoisonB, Set = v => SaunaBucketLiquidTuning.PoisonB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.poison.A", Hint = "Poison mead: opacity", Get = () => SaunaBucketLiquidTuning.PoisonA, Set = v => SaunaBucketLiquidTuning.PoisonA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
 
-                    new Entry { Name = "bucket.frost.R", Get = () => SaunaBucketLiquidTuning.FrostR, Set = v => SaunaBucketLiquidTuning.FrostR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.frost.G", Get = () => SaunaBucketLiquidTuning.FrostG, Set = v => SaunaBucketLiquidTuning.FrostG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.frost.B", Get = () => SaunaBucketLiquidTuning.FrostB, Set = v => SaunaBucketLiquidTuning.FrostB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.frost.A", Get = () => SaunaBucketLiquidTuning.FrostA, Set = v => SaunaBucketLiquidTuning.FrostA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.frost.R", Hint = "Frost mead: red", Get = () => SaunaBucketLiquidTuning.FrostR, Set = v => SaunaBucketLiquidTuning.FrostR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.frost.G", Hint = "Frost mead: green", Get = () => SaunaBucketLiquidTuning.FrostG, Set = v => SaunaBucketLiquidTuning.FrostG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.frost.B", Hint = "Frost mead: blue", Get = () => SaunaBucketLiquidTuning.FrostB, Set = v => SaunaBucketLiquidTuning.FrostB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.frost.A", Hint = "Frost mead: opacity", Get = () => SaunaBucketLiquidTuning.FrostA, Set = v => SaunaBucketLiquidTuning.FrostA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
 
-                    new Entry { Name = "bucket.fire.R", Get = () => SaunaBucketLiquidTuning.FireR, Set = v => SaunaBucketLiquidTuning.FireR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.fire.G", Get = () => SaunaBucketLiquidTuning.FireG, Set = v => SaunaBucketLiquidTuning.FireG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.fire.B", Get = () => SaunaBucketLiquidTuning.FireB, Set = v => SaunaBucketLiquidTuning.FireB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
-                    new Entry { Name = "bucket.fire.A", Get = () => SaunaBucketLiquidTuning.FireA, Set = v => SaunaBucketLiquidTuning.FireA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon }
+                    new Entry { Name = "bucket.fire.R", Hint = "Fire wine: red", Get = () => SaunaBucketLiquidTuning.FireR, Set = v => SaunaBucketLiquidTuning.FireR = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.fire.G", Hint = "Fire wine: green", Get = () => SaunaBucketLiquidTuning.FireG, Set = v => SaunaBucketLiquidTuning.FireG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.fire.B", Hint = "Fire wine: blue", Get = () => SaunaBucketLiquidTuning.FireB, Set = v => SaunaBucketLiquidTuning.FireB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
+                    new Entry { Name = "bucket.fire.A", Hint = "Fire wine: opacity", Get = () => SaunaBucketLiquidTuning.FireA, Set = v => SaunaBucketLiquidTuning.FireA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon }
                 }
             },
             new Section
@@ -152,9 +153,9 @@ namespace SaunaMod
                 Name = "Effect Icons",
                 Entries = new[]
                 {
-                    new Entry { Name = "badge.X",     Get = () => SaunaWellSteamedTierBadgePatch.BadgeOffsetX, Set = v => SaunaWellSteamedTierBadgePatch.BadgeOffsetX = v, Step = 1f, AllowNegative = true },
-                    new Entry { Name = "badge.Y",     Get = () => SaunaWellSteamedTierBadgePatch.BadgeOffsetY, Set = v => SaunaWellSteamedTierBadgePatch.BadgeOffsetY = v, Step = 1f, AllowNegative = true },
-                    new Entry { Name = "badge.Scale", Get = () => SaunaWellSteamedTierBadgePatch.BadgeScale,   Set = v => SaunaWellSteamedTierBadgePatch.BadgeScale = Mathf.Max(0.1f, v), Step = 0.05f }
+                    new Entry { Name = "badge.X", Hint = "Tier badge: horizontal shift",     Get = () => SaunaWellSteamedTierBadgePatch.BadgeOffsetX, Set = v => SaunaWellSteamedTierBadgePatch.BadgeOffsetX = v, Step = 1f, AllowNegative = true },
+                    new Entry { Name = "badge.Y", Hint = "Tier badge: vertical shift",     Get = () => SaunaWellSteamedTierBadgePatch.BadgeOffsetY, Set = v => SaunaWellSteamedTierBadgePatch.BadgeOffsetY = v, Step = 1f, AllowNegative = true },
+                    new Entry { Name = "badge.Scale", Hint = "Tier badge: size", Get = () => SaunaWellSteamedTierBadgePatch.BadgeScale,   Set = v => SaunaWellSteamedTierBadgePatch.BadgeScale = Mathf.Max(0.1f, v), Step = 0.05f }
                 }
             },
             new Section
@@ -162,17 +163,17 @@ namespace SaunaMod
                 Name = "Steam",
                 Entries = new[]
                 {
-                    new Entry { Name = "steam.Lifetime",      Get = () => SteamTuning.Lifetime,      Set = v => SteamTuning.Lifetime = Mathf.Max(SteamTuning.MinLifetime, v), Step = 5f },
-                    new Entry { Name = "steam.FadeTime",      Get = () => SteamTuning.FadeTime,      Set = v => SteamTuning.FadeTime = v,           Step = 0.5f },
-                    new Entry { Name = "steam.Spread",        Get = () => SteamTuning.Spread,        Set = v => SteamTuning.Spread = v,             Step = 0.05f },
-                    new Entry { Name = "steam.Rise",          Get = () => SteamTuning.Rise,          Set = v => SteamTuning.Rise = v,               Step = 0.1f },
-                    new Entry { Name = "steam.Force",         Get = () => SteamTuning.Force,         Set = v => SteamTuning.Force = v,              Step = 0.25f },
-                    new Entry { Name = "steam.Push",          Get = () => SteamTuning.Push,          Set = v => SteamTuning.Push = v,               Step = 0.25f },
-                    new Entry { Name = "steam.CloudSize",     Get = () => SteamTuning.CloudSize,     Set = v => SteamTuning.CloudSize = v,          Step = 0.1f },
-                    new Entry { Name = "steam.CloudsGenerated.WithoutBucket", Get = () => SteamTuning.CloudsPerPour,           Set = v => SteamTuning.CloudsPerPour = Mathf.Max(1, (int)v),           Step = 1f, Integer = true },
-                    new Entry { Name = "steam.CloudsGenerated.WithBucket",    Get = () => SteamTuning.CloudsPerPourWithBucket, Set = v => SteamTuning.CloudsPerPourWithBucket = Mathf.Max(1, (int)v), Step = 1f, Integer = true },
-                    new Entry { Name = "steam.MaxClouds",     Get = () => SteamTuning.MaxClouds,     Set = v => SteamTuning.MaxClouds = (int)v,     Step = 10f, Integer = true },
-                    new Entry { Name = "steam.Grace",         Get = () => SteamTuning.Grace,         Set = v => SteamTuning.Grace = v,              Step = 0.5f }
+                    new Entry { Name = "steam.Lifetime", Hint = "Seconds a steam cloud lives before fading",      Get = () => SteamTuning.Lifetime,      Set = v => SteamTuning.Lifetime = Mathf.Max(SteamTuning.MinLifetime, v), Step = 5f },
+                    new Entry { Name = "steam.FadeTime", Hint = "Seconds a cloud takes to fade",      Get = () => SteamTuning.FadeTime,      Set = v => SteamTuning.FadeTime = v,           Step = 0.5f },
+                    new Entry { Name = "steam.Spread", Hint = "Sideways spreading speed of steam",        Get = () => SteamTuning.Spread,        Set = v => SteamTuning.Spread = v,             Step = 0.05f },
+                    new Entry { Name = "steam.Rise", Hint = "Rising speed of steam",          Get = () => SteamTuning.Rise,          Set = v => SteamTuning.Rise = v,               Step = 0.1f },
+                    new Entry { Name = "steam.Force", Hint = "How fast steam reaches its speed",         Get = () => SteamTuning.Force,         Set = v => SteamTuning.Force = v,              Step = 0.25f },
+                    new Entry { Name = "steam.Push", Hint = "How strongly clouds push each other apart",          Get = () => SteamTuning.Push,          Set = v => SteamTuning.Push = v,               Step = 0.25f },
+                    new Entry { Name = "steam.CloudSize", Hint = "Cloud size (contact, not the sprite)",     Get = () => SteamTuning.CloudSize,     Set = v => SteamTuning.CloudSize = v,          Step = 0.1f },
+                    new Entry { Name = "steam.CloudsGenerated.WithoutBucket", Hint = "Clouds per pour without bucket", Get = () => SteamTuning.CloudsPerPour,           Set = v => SteamTuning.CloudsPerPour = Mathf.Max(1, (int)v),           Step = 1f, Integer = true },
+                    new Entry { Name = "steam.CloudsGenerated.WithBucket", Hint = "Clouds per pour with bucket",    Get = () => SteamTuning.CloudsPerPourWithBucket, Set = v => SteamTuning.CloudsPerPourWithBucket = Mathf.Max(1, (int)v), Step = 1f, Integer = true },
+                    new Entry { Name = "steam.MaxClouds", Hint = "World cap for steam and smoke clouds",     Get = () => SteamTuning.MaxClouds,     Set = v => SteamTuning.MaxClouds = (int)v,     Step = 10f, Integer = true },
+                    new Entry { Name = "steam.Grace", Hint = "Seconds out of steam before progress resets",         Get = () => SteamTuning.Grace,         Set = v => SteamTuning.Grace = v,              Step = 0.5f }
                 }
             },
             new Section
@@ -180,10 +181,10 @@ namespace SaunaMod
                 Name = "Skin Redness",
                 Entries = new[]
                 {
-                    new Entry { Name = "skinredness.Strength",    Get = () => SkinRednessTuning.Strength,    Set = v => SkinRednessTuning.Strength = Mathf.Clamp01(v),    Step = 0.05f, Changed = RefreshSkinRedness },
-                    new Entry { Name = "skinredness.CoolSeconds", Get = () => SkinRednessTuning.CoolSeconds, Set = v => SkinRednessTuning.CoolSeconds = Mathf.Max(1f, v), Step = 5f },
+                    new Entry { Name = "skinredness.Strength", Hint = "How red the skin gets at maximum",    Get = () => SkinRednessTuning.Strength,    Set = v => SkinRednessTuning.Strength = Mathf.Clamp01(v),    Step = 0.05f, Changed = RefreshSkinRedness },
+                    new Entry { Name = "skinredness.CoolSeconds", Hint = "Seconds for skin to cool from maximum", Get = () => SkinRednessTuning.CoolSeconds, Set = v => SkinRednessTuning.CoolSeconds = Mathf.Max(1f, v), Step = 5f },
                     // 0 = real sauna heat; 1 = show full redness to tune the color.
-                    new Entry { Name = "skinredness.Preview",     Get = () => SkinRednessTuning.Preview,     Set = v => SkinRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshSkinRedness }
+                    new Entry { Name = "skinredness.Preview", Hint = "1 = show maximum skin redness",     Get = () => SkinRednessTuning.Preview,     Set = v => SkinRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshSkinRedness }
                 }
             },
             new Section
@@ -191,10 +192,10 @@ namespace SaunaMod
                 Name = "Mead Test",
                 Entries = new[]
                 {
-                    new Entry { Name = "mead.DurationMultiplier", Get = () => SaunaMeadTuning.DurationMultiplier, Set = v => SaunaMeadTuning.DurationMultiplier = Mathf.Max(0.1f, v), Step = 0.05f },
-                    new Entry { Name = "TEST Spawn Poison Mead x10", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () => SaunaMeadSystem.SpawnTestMead(SaunaMeadSystem.Poison, 10) },
-                    new Entry { Name = "TEST Spawn Frost Mead x10",  Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () => SaunaMeadSystem.SpawnTestMead(SaunaMeadSystem.Frost, 10) },
-                    new Entry { Name = "TEST Spawn Fire Wine x10",   Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () => SaunaMeadSystem.SpawnTestMead(SaunaMeadSystem.Fire, 10) }
+                    new Entry { Name = "mead.DurationMultiplier", Hint = "Duration multiplier for mead from steam", Get = () => SaunaMeadTuning.DurationMultiplier, Set = v => SaunaMeadTuning.DurationMultiplier = Mathf.Max(0.1f, v), Step = 0.05f },
+                    new Entry { Name = "TEST Spawn Poison Mead x10", Hint = "Give 10 poison resistance meads", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () => SaunaMeadSystem.SpawnTestMead(SaunaMeadSystem.Poison, 10) },
+                    new Entry { Name = "TEST Spawn Frost Mead x10", Hint = "Give 10 frost resistance meads",  Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () => SaunaMeadSystem.SpawnTestMead(SaunaMeadSystem.Frost, 10) },
+                    new Entry { Name = "TEST Spawn Fire Wine x10", Hint = "Give 10 fire resistance wines",   Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () => SaunaMeadSystem.SpawnTestMead(SaunaMeadSystem.Fire, 10) }
                 }
             }
         };
@@ -373,6 +374,7 @@ namespace SaunaMod
 
             return $"Sauna Editor  [{_sectionIndex + 1}/{Sections.Length}] {section.Name}\n" +
                    $"[{_entryIndex + 1}/{section.Entries.Length}] {e.Name} = {FormatValue(e)}\n" +
+                   $"   {e.Hint}\n" +
                    "PgUp/PgDn section   ← → parameter   ↑ ↓ value   Ctrl ×0.1   Shift ×10\n" +
                    "F8 dump settings   F9 save current icon PNG   F10 extinguish stove   F7 close";
         }

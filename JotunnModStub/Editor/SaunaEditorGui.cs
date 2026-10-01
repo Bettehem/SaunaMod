@@ -20,8 +20,8 @@ namespace SaunaMod
     {
         private void OnGUI()
         {
-            GUI.Box(new Rect(10f, 10f, 660f, 132f), "");
-            GUI.Label(new Rect(20f, 16f, 640f, 116f), SaunaEditor.StatusLine());
+            GUI.Box(new Rect(10f, 10f, 660f, 152f), "");
+            GUI.Label(new Rect(20f, 16f, 640f, 136f), SaunaEditor.StatusLine());
         }
     }
 }
