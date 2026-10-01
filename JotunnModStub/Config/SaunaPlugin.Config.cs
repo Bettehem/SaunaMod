@@ -106,6 +106,13 @@ namespace SaunaMod
                     "How long a short gap between steam clouds may last without resetting steaming progress.",
                     new AcceptableValueRange<float>(0f, 20f)));
 
+            _cfgTooHotWeapons = _saunaConfig.Bind(
+                "Gameplay",
+                "TooHotWeapons",
+                true,
+                SyncedConfigDescription(
+                    "Holding weapons while steaming in the sauna will trigger the Too Hot status effect"));
+
             _cfgWellSteamedTier1Minutes = _saunaConfig.Bind(
                 "WellSteamed",
                 "Tier1DurationMinutes",
@@ -228,6 +235,9 @@ namespace SaunaMod
             SteamHealPerSecond = Mathf.Max(0f, _cfgSteamHealPerSecond.Value);
             DetectRadius = Mathf.Max(0.1f, _cfgDetectRadius.Value);
             SteamTuning.Grace = Mathf.Max(0f, _cfgSteamGrace.Value);
+            if (_cfgTooHotWeapons != null) {
+                TooHotWeapons = _cfgTooHotWeapons.Value;
+            }
 
             // Keep the three time tiers monotonic even if somebody edits the cfg by hand.
             WellSteamedTimeTiers[0] = Mathf.Max(30f, _cfgWellSteamedTier1Minutes.Value * 60f);

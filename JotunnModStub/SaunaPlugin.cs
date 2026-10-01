@@ -65,6 +65,7 @@ namespace SaunaMod
         private ConfigEntry<float> _cfgSteamHealPerSecond;
         private ConfigEntry<float> _cfgDetectRadius;
         private ConfigEntry<float> _cfgSteamGrace;
+        private ConfigEntry<bool> _cfgTooHotWeapons;
 
         private ConfigEntry<float> _cfgWellSteamedTier1Minutes;
         private ConfigEntry<float> _cfgWellSteamedTier2Minutes;
