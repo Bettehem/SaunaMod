@@ -1,18 +1,8 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Nekitker
-using BepInEx;
-using BepInEx.Configuration;
-using HarmonyLib;
-using Jotunn.Configs;
-using Jotunn.Entities;
-using Jotunn.Managers;
-using Jotunn.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace SaunaMod
 {
@@ -31,57 +21,59 @@ namespace SaunaMod
         public const float BurstHeight = 0.5f;
         public const float PourVolume = 1.0f;
 
+        /// Steam spreads, so the stove counts for players this far away.
+        private const float SaunaRange = 8f;
+
+        /// Editor tools act on the nearest stove within this distance.
+        private const float EditorToolRange = 20f;
+
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
+
         private static readonly List<SaunaStove> s_all = new List<SaunaStove>();
 
         private Fireplace m_fireplace;
         private ZNetView m_nview;
         private AudioSource m_audio;
 
-        private Transform m_hotStones;
-        private Transform m_coldStones;
-        private bool m_wasHot;
-        private float m_heatTimer;
-
-        // The first update waits one second so that Fireplace has already caught up
-        // the fuel it burned while the area was unloaded.
-        private float m_stoneHeatTimer = 1f;
-
-        private static readonly int ColorId = Shader.PropertyToID("_Color");
-        private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
-
+        // ---- visuals ----
         private MeshRenderer m_domeRenderer;
         private MeshRenderer m_floorRenderer;
+        private MeshRenderer m_coalRenderer;
+        private readonly List<MeshRenderer> m_campfireLogs = new List<MeshRenderer>();
         private MaterialPropertyBlock m_stoneBlock;
+        private MaterialPropertyBlock m_logBlock;
+        private MaterialPropertyBlock m_coalBlock;
         private Light m_glowLight;
 
-        // Heat shown on the stones. It eases toward the real heat, so a pour fades
+        private bool m_burning;
+        private float m_burningCheckTimer;
+
+        // Heat shown on the stones (0..MaxHeat). It eases toward the real heat, so a pour fades
         // the red over a moment instead of snapping. Negative = not shown yet.
         private float m_displayHeat = -1f;
         private float m_shownHeat = -1f;
-        private float m_burstLeft;
-        private float m_spawnAccum;
+        private float m_shownCoalGlow = -1f;
+
+        // The first update waits one second so that Fireplace has already caught up
+        // the fuel it burned while the area was unloaded.
+        private float m_heatUpdateTimer = 1f;
+
+        // ---- steam burst ----
+        private float m_burstTimeLeft;
+        private float m_cloudsToSpawn;
         private int m_burstCloudCount = 20;
 
+        // ---- original fire transforms, so repeated rebuilds do not accumulate offsets ----
         private readonly List<Transform> m_fireRoots = new List<Transform>();
-        private readonly List<UnityEngine.Vector3> m_firePos = new List<UnityEngine.Vector3>();
-        private readonly List<UnityEngine.Vector3> m_fireScale = new List<UnityEngine.Vector3>();
-        private readonly List<ParticleSystem> m_fireParticles = new List<ParticleSystem>();
-        private readonly List<UnityEngine.Vector3> m_fireParticlePos = new List<UnityEngine.Vector3>();
-        private readonly List<UnityEngine.Vector3> m_fireParticleScale = new List<UnityEngine.Vector3>();
-        private readonly List<float> m_fireParticleStartSize = new List<float>();
+        private readonly List<Vector3> m_fireRootPositions = new List<Vector3>();
+        private readonly List<Vector3> m_fireRootScales = new List<Vector3>();
+        private readonly List<ParticleSystem> m_flames = new List<ParticleSystem>();
+        private readonly List<Vector3> m_flamePositions = new List<Vector3>();
+        private readonly List<Vector3> m_flameScales = new List<Vector3>();
+        private readonly List<float> m_flameStartSizes = new List<float>();
         private readonly List<SphereCollider> m_warmthColliders = new List<SphereCollider>();
         private readonly List<float> m_warmthRadii = new List<float>();
-
-        public static void RebuildAll()
-        {
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove != null)
-                {
-                    stove.RefreshVisual();
-                }
-            }
-        }
 
         private void Awake()
         {
@@ -118,7 +110,483 @@ namespace SaunaMod
             s_all.Remove(this);
         }
 
-        /// Stores the original fire positions so repeated edits do not accumulate offsets.
+        private void Update()
+        {
+            // There is no need to check burning every frame; twice per second is more than enough.
+            m_burningCheckTimer -= Time.deltaTime;
+            if (m_burningCheckTimer <= 0f)
+            {
+                m_burningCheckTimer = 0.5f;
+                UpdateCampfire(false);
+            }
+
+            m_heatUpdateTimer -= Time.deltaTime;
+            if (m_heatUpdateTimer <= 0f)
+            {
+                m_heatUpdateTimer = 1f;
+                UpdateStoneHeat();
+            }
+
+            UpdateStoneVisual();
+            UpdateSteamBurst();
+        }
+
+        // =====================================================================
+        // Stove lookup
+        // =====================================================================
+
+        public static void RebuildAll()
+        {
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove != null)
+                {
+                    stove.RefreshVisual();
+                }
+            }
+        }
+
+        /// Nearest stove within maxDistance that matches the filter, or null.
+        private static SaunaStove FindNearest(Vector3 position, float maxDistance, Func<SaunaStove, bool> filter)
+        {
+            SaunaStove nearest = null;
+            float bestDistanceSqr = maxDistance * maxDistance;
+
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove == null || !filter(stove))
+                {
+                    continue;
+                }
+
+                float distanceSqr = (stove.transform.position - position).sqrMagnitude;
+                if (distanceSqr < bestDistanceSqr)
+                {
+                    bestDistanceSqr = distanceSqr;
+                    nearest = stove;
+                }
+            }
+
+            return nearest;
+        }
+
+        /// Placement ghosts have no valid ZDO and never count as a real stove.
+        private bool IsPlaced()
+        {
+            return m_nview != null && m_nview.IsValid();
+        }
+
+        /// Nearest actually placed sauna stove, used for linking accessories.
+        public static SaunaStove FindClosestForVisualLink(Vector3 position, float maxDistance)
+        {
+            return FindNearest(position, maxDistance, stove => stove.IsPlaced());
+        }
+
+        /// Anchor point for the golden connection line. This is visual only;
+        /// the stove does not need a CraftingStation or StationExtension for it.
+        public Vector3 VisualLinkPoint()
+        {
+            return transform.position + Vector3.up * 0.45f;
+        }
+
+        // =====================================================================
+        // Sauna accessories
+        // =====================================================================
+
+        /// Whisks and bucket linked to THIS stove. Uses the same rule as the golden line:
+        /// the accessory must be within MaxLinkDistance and this stove must be its nearest stove.
+        private void FindLinkedAccessories(out bool hasWhisks, out bool hasBucket)
+        {
+            hasWhisks = false;
+            hasBucket = false;
+
+            foreach (Piece piece in Piece.s_allPieces)
+            {
+                if (piece == null)
+                {
+                    continue;
+                }
+
+                bool isWhisks = piece.m_name == "$piece_sauna_wrisks";
+                bool isBucket = piece.m_name == "$piece_sauna_bucket";
+                if (!isWhisks && !isBucket)
+                {
+                    continue;
+                }
+
+                // Placement ghosts also have Piece components, so count only actually placed objects.
+                ZNetView pieceView = piece.GetComponent<ZNetView>();
+                if (pieceView == null || !pieceView.IsValid())
+                {
+                    continue;
+                }
+
+                if (FindClosestForVisualLink(piece.transform.position, SaunaVisualLink.MaxLinkDistance) != this)
+                {
+                    continue;
+                }
+
+                hasWhisks |= isWhisks;
+                hasBucket |= isBucket;
+
+                if (hasWhisks && hasBucket)
+                {
+                    return;
+                }
+            }
+        }
+
+        /// Sauna tier around THIS stove. The bucket alone does not raise the tier;
+        /// progression is stove -> whisks -> bucket.
+        public int GetWellSteamedSaunaTier()
+        {
+            bool hasWhisks;
+            bool hasBucket;
+            FindLinkedAccessories(out hasWhisks, out hasBucket);
+
+            if (hasWhisks && hasBucket)
+            {
+                return 3;
+            }
+
+            return hasWhisks ? 2 : 1;
+        }
+
+        /// Use the nearest stove to the player when granting Well Steamed.
+        /// Steam physically originates at the stove, so SaunaRange leaves room for cloud movement,
+        /// while accessories are still counted only within their own link radius.
+        public static int GetWellSteamedSaunaTierNear(Vector3 position)
+        {
+            SaunaStove stove = FindClosestForVisualLink(position, SaunaRange);
+            return stove != null ? stove.GetWellSteamedSaunaTier() : 1;
+        }
+
+        /// Comfort bonus from sauna accessories around the nearest stove with hot stones
+        /// (at least StoveTuning.ComfortMinHeat). Whisks and bucket each contribute +1.
+        public static int GetSaunaComfortBonusNear(Vector3 position)
+        {
+            SaunaStove hotStove = FindNearest(position, SaunaRange,
+                stove => stove.GetHeat() >= StoveTuning.ComfortMinHeat);
+
+            if (hotStove == null)
+            {
+                return 0;
+            }
+
+            bool hasWhisks;
+            bool hasBucket;
+            hotStove.FindLinkedAccessories(out hasWhisks, out hasBucket);
+
+            return (hasWhisks ? 1 : 0) + (hasBucket ? 1 : 0);
+        }
+
+        // =====================================================================
+        // Editor tools
+        // =====================================================================
+
+        /// Instantly consume all fuel in the nearest sauna stove.
+        /// SetFuel forwards to the owner through RPC, so it also works in multiplayer.
+        public static void ExtinguishNearest(Vector3 position)
+        {
+            SaunaStove nearest = FindNearest(position, EditorToolRange, stove => stove.m_fireplace != null);
+            if (nearest == null)
+            {
+                Jotunn.Logger.LogInfo($"extinguish: no sauna stove within {EditorToolRange:0} m");
+                return;
+            }
+
+            nearest.m_fireplace.SetFuel(0f);
+            Jotunn.Logger.LogInfo("extinguish: stove fuel set to 0");
+        }
+
+        /// Set the stone heat of the nearest sauna stove.
+        public static void SetHeatNearest(Vector3 position, float heat)
+        {
+            SaunaStove nearest = FindNearest(position, EditorToolRange, stove => stove.IsPlaced());
+            if (nearest == null)
+            {
+                Jotunn.Logger.LogInfo($"set heat: no sauna stove within {EditorToolRange:0} m");
+                return;
+            }
+
+            if (!nearest.m_nview.IsOwner())
+            {
+                nearest.m_nview.ClaimOwnership();
+            }
+
+            // Restart the heat clock so the next update does not apply time from before the override.
+            ZDO zdo = nearest.m_nview.GetZDO();
+            zdo.Set(ZdoHeatTime, HeatClockTicks());
+            zdo.Set(ZdoHeat, Mathf.Clamp(heat, 0f, StoveTuning.MaxHeat));
+            Jotunn.Logger.LogInfo($"set heat: stove heat set to {heat:0}");
+        }
+
+        /// Push the current fuel rules to every placed stove.
+        public static void ApplyFuelToAll()
+        {
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove != null)
+                {
+                    StoveTuning.ApplyFuel(stove.m_fireplace);
+                }
+            }
+        }
+
+        /// Re-tint every stove after a redness or glow setting changed.
+        public static void RefreshStoneHeatAll()
+        {
+            foreach (SaunaStove stove in s_all)
+            {
+                if (stove != null)
+                {
+                    stove.m_shownHeat = -1f;
+                    stove.m_shownCoalGlow = -1f;
+                }
+            }
+        }
+
+        // =====================================================================
+        // Stone heat
+        // =====================================================================
+
+        /// Stone heat from 0 to StoveTuning.MaxHeat, as last written by the owner.
+        public float GetHeat()
+        {
+            return IsPlaced() ? m_nview.GetZDO().GetFloat(ZdoHeat, 0f) : 0f;
+        }
+
+        private bool IsBurning()
+        {
+            // IsBurning reads ZDO without a null check, so placement ghosts would throw.
+            return m_fireplace != null && IsPlaced() && m_fireplace.IsBurning();
+        }
+
+        private static long HeatClockTicks()
+        {
+            return ZNet.instance != null ? ZNet.instance.GetTime().Ticks : DateTime.Now.Ticks;
+        }
+
+        /// Owner only: advance the stone heat by the time passed since the last update.
+        /// Elapsed time is measured on the network clock and stored in the ZDO, so the heat
+        /// also catches up after the area was unloaded or ownership changed hands.
+        private void UpdateStoneHeat()
+        {
+            if (m_fireplace == null || !IsPlaced() || !m_nview.IsOwner())
+            {
+                return;
+            }
+
+            ZDO zdo = m_nview.GetZDO();
+            long nowTicks = HeatClockTicks();
+            long lastTicks = zdo.GetLong(ZdoHeatTime, 0L);
+            zdo.Set(ZdoHeatTime, nowTicks);
+
+            if (lastTicks <= 0L || nowTicks <= lastTicks)
+            {
+                return;
+            }
+
+            float minutes = (float)((nowTicks - lastTicks) / (double)TimeSpan.TicksPerMinute);
+            float heatPerMinute = m_fireplace.IsBurning()
+                ? StoveTuning.HeatPerMinute
+                : -StoveTuning.CoolPerMinute;
+
+            float heat = zdo.GetFloat(ZdoHeat, 0f);
+            zdo.Set(ZdoHeat, Mathf.Clamp(heat + heatPerMinute * minutes, 0f, StoveTuning.MaxHeat));
+        }
+
+        // =====================================================================
+        // Visuals
+        // =====================================================================
+
+        public void RefreshVisual()
+        {
+            StoveVisual.Build(transform);
+            ApplyFire();
+
+            // Rebuilt children are new objects, so resolve them again and immediately apply the current state.
+            m_domeRenderer = FindRenderer(StoveVisual.DomeName);
+            m_floorRenderer = FindRenderer(StoveVisual.FloorName);
+            m_coalRenderer = FindRenderer(StoveVisual.CoalName);
+
+            m_campfireLogs.Clear();
+            Transform campfire = transform.Find(StoveVisual.CampfireName);
+            if (campfire != null)
+            {
+                m_campfireLogs.AddRange(campfire.GetComponentsInChildren<MeshRenderer>(true));
+            }
+
+            UpdateCampfire(true);
+            m_shownHeat = -1f;
+            m_shownCoalGlow = -1f;
+        }
+
+        private MeshRenderer FindRenderer(string childName)
+        {
+            Transform child = transform.Find(childName);
+            return child != null ? child.GetComponent<MeshRenderer>() : null;
+        }
+
+        private void SetupGlowLight()
+        {
+            GameObject lightObject = new GameObject("sauna_stone_glow");
+            lightObject.transform.SetParent(transform, false);
+            lightObject.transform.localPosition = Vector3.up * 0.6f;
+
+            m_glowLight = lightObject.AddComponent<Light>();
+            m_glowLight.type = LightType.Point;
+            m_glowLight.color = StoneRednessTuning.LightColor;
+            m_glowLight.shadows = LightShadows.None;
+            m_glowLight.intensity = 0f;
+            m_glowLight.enabled = false;
+        }
+
+        /// Redness and glow of the stones, coal glow and the stone light, all following the stone heat.
+        private void UpdateStoneVisual()
+        {
+            float targetHeat = SaunaEditor.Active && StoneRednessTuning.Preview > 0
+                ? StoveTuning.MaxHeat
+                : GetHeat();
+
+            m_displayHeat = m_displayHeat < 0f
+                ? targetHeat
+                : Mathf.MoveTowards(m_displayHeat, targetHeat, 40f * Time.deltaTime);
+
+            // 0 = cold stones, 1 = fully heated.
+            float stoneHeat = Mathf.Clamp01(m_displayHeat / StoveTuning.MaxHeat);
+            UpdateCoalGlow(stoneHeat);
+
+            if (m_shownHeat >= 0f && Mathf.Abs(m_displayHeat - m_shownHeat) < 0.2f)
+            {
+                return;
+            }
+
+            m_shownHeat = m_displayHeat;
+
+            TintStones(m_domeRenderer, StoveVisual.DomeBandWeights, stoneHeat, 1f);
+            TintStones(m_floorRenderer, StoveVisual.FloorBandWeights, stoneHeat, StoneRednessTuning.FloorGlowBoost);
+
+            if (m_glowLight != null)
+            {
+                float intensity = StoneRednessTuning.LightIntensity * stoneHeat;
+                m_glowLight.intensity = intensity;
+                m_glowLight.range = StoneRednessTuning.LightRange;
+                m_glowLight.enabled = intensity > 0.01f;
+            }
+        }
+
+        /// Each material slot of the dome/floor is one heat band; its weight scales the redness.
+        private void TintStones(MeshRenderer stoneRenderer, float[] bandWeights, float stoneHeat, float glowScale)
+        {
+            if (stoneRenderer == null)
+            {
+                return;
+            }
+
+            if (m_stoneBlock == null)
+            {
+                m_stoneBlock = new MaterialPropertyBlock();
+            }
+
+            Material[] materials = stoneRenderer.sharedMaterials;
+            int bandCount = Mathf.Min(materials.Length, bandWeights.Length);
+
+            for (int band = 0; band < bandCount; band++)
+            {
+                Material material = materials[band];
+                if (material == null)
+                {
+                    continue;
+                }
+
+                float redness = bandWeights[band] * stoneHeat;
+                m_stoneBlock.Clear();
+
+                if (material.HasProperty(ColorId))
+                {
+                    m_stoneBlock.SetColor(ColorId, StoneRednessTuning.Apply(material.GetColor(ColorId), redness));
+                }
+
+                if (material.HasProperty(EmissionId))
+                {
+                    m_stoneBlock.SetColor(EmissionId, StoneRednessTuning.Emission(redness) * glowScale);
+                }
+
+                stoneRenderer.SetPropertyBlock(m_stoneBlock, band);
+            }
+        }
+
+        /// Campfire logs inside the stove. Unlike the vanilla campfire they never disappear:
+        /// with the fire out they lose their glow and darken to look burnt.
+        private void UpdateCampfire(bool force)
+        {
+            bool burning = IsBurning();
+            if (!force && burning == m_burning)
+            {
+                return;
+            }
+
+            m_burning = burning;
+
+            if (m_logBlock == null)
+            {
+                m_logBlock = new MaterialPropertyBlock();
+            }
+
+            foreach (MeshRenderer log in m_campfireLogs)
+            {
+                if (log == null)
+                {
+                    continue;
+                }
+
+                Material[] materials = log.sharedMaterials;
+                for (int slot = 0; slot < materials.Length; slot++)
+                {
+                    m_logBlock.Clear();
+
+                    if (!burning && materials[slot] != null)
+                    {
+                        if (materials[slot].HasProperty(ColorId))
+                        {
+                            m_logBlock.SetColor(ColorId, materials[slot].GetColor(ColorId) * StoveVisual.CharredLogTint);
+                        }
+
+                        m_logBlock.SetColor(EmissionId, Color.black);
+                    }
+
+                    log.SetPropertyBlock(m_logBlock, slot);
+                }
+            }
+        }
+
+        /// Coals glow fully while the fire burns, and with the fire out as long as the stones are hot.
+        private void UpdateCoalGlow(float stoneHeat)
+        {
+            float glow = Mathf.Max(m_burning ? 1f : 0f, stoneHeat) * Mathf.Max(0f, StoneRednessTuning.CoalGlow);
+            if (m_coalRenderer == null || (m_shownCoalGlow >= 0f && Mathf.Abs(glow - m_shownCoalGlow) < 0.005f))
+            {
+                return;
+            }
+
+            m_shownCoalGlow = glow;
+
+            if (m_coalBlock == null)
+            {
+                m_coalBlock = new MaterialPropertyBlock();
+            }
+
+            m_coalBlock.Clear();
+            m_coalBlock.SetColor(EmissionId, StoneRednessTuning.CoalGlowColor * glow);
+            m_coalRenderer.SetPropertyBlock(m_coalBlock);
+        }
+
+        // =====================================================================
+        // Fire
+        // =====================================================================
+
+        /// Stores the original fire transforms so repeated rebuilds do not accumulate offsets.
         private void CacheFireRoots()
         {
             if (m_fireplace == null)
@@ -126,41 +594,40 @@ namespace SaunaMod
                 return;
             }
 
-            GameObject[] objects =
+            GameObject[] fireObjects =
             {
                 m_fireplace.m_enabledObject,
                 m_fireplace.m_enabledObjectLow,
                 m_fireplace.m_enabledObjectHigh
             };
 
-            foreach (GameObject go in objects)
+            foreach (GameObject fireObject in fireObjects)
             {
-                if (go == null)
+                if (fireObject == null)
                 {
                     continue;
                 }
 
-                m_fireRoots.Add(go.transform);
-                m_firePos.Add(go.transform.localPosition);
-                m_fireScale.Add(go.transform.localScale);
+                m_fireRoots.Add(fireObject.transform);
+                m_fireRootPositions.Add(fireObject.transform.localPosition);
+                m_fireRootScales.Add(fireObject.transform.localScale);
 
-                foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+                foreach (ParticleSystem flame in fireObject.GetComponentsInChildren<ParticleSystem>(true))
                 {
-                    if (ps == null || m_fireParticles.Contains(ps))
+                    if (flame == null || m_flames.Contains(flame))
                     {
                         continue;
                     }
 
-                    ParticleSystem.MainModule main = ps.main;
-                    m_fireParticles.Add(ps);
-                    m_fireParticlePos.Add(ps.transform.localPosition);
-                    m_fireParticleScale.Add(ps.transform.localScale);
-                    m_fireParticleStartSize.Add(main.startSizeMultiplier);
+                    m_flames.Add(flame);
+                    m_flamePositions.Add(flame.transform.localPosition);
+                    m_flameScales.Add(flame.transform.localScale);
+                    m_flameStartSizes.Add(flame.main.startSizeMultiplier);
                 }
 
                 // The heat zone is an EffectArea. Do not touch the ignition Aoe,
                 // otherwise the player could catch fire while standing away from the stove.
-                foreach (EffectArea area in go.GetComponentsInChildren<EffectArea>(true))
+                foreach (EffectArea area in fireObject.GetComponentsInChildren<EffectArea>(true))
                 {
                     SphereCollider sphere = area.GetComponent<SphereCollider>();
 
@@ -181,494 +648,32 @@ namespace SaunaMod
             }
         }
 
-        public void RefreshVisual()
-        {
-            StoveVisual.Build(transform);
-            ApplyFire();
-
-            // Rebuilt children are new objects, so resolve them again and immediately apply the current state.
-            m_hotStones = transform.Find(StoveVisual.LavaName);
-            m_coldStones = transform.Find(StoveVisual.CoalName);
-            ApplyHeat(IsHot(), true);
-
-            m_domeRenderer = FindRenderer(StoveVisual.DomeName);
-            m_floorRenderer = FindRenderer(StoveVisual.FloorName);
-            m_shownHeat = -1f;
-        }
-
-        private MeshRenderer FindRenderer(string name)
-        {
-            Transform t = transform.Find(name);
-            return t != null ? t.GetComponent<MeshRenderer>() : null;
-        }
-
-        /// Editor: re-tint every stove after a redness or glow setting changed.
-        public static void RefreshStoneHeatAll()
-        {
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove != null)
-                {
-                    stove.m_shownHeat = -1f;
-                }
-            }
-        }
-
-        private void SetupGlowLight()
-        {
-            GameObject go = new GameObject("sauna_stone_glow");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = UnityEngine.Vector3.up * 0.6f;
-
-            m_glowLight = go.AddComponent<Light>();
-            m_glowLight.type = LightType.Point;
-            m_glowLight.color = StoneRednessTuning.LightColor;
-            m_glowLight.shadows = LightShadows.None;
-            m_glowLight.intensity = 0f;
-            m_glowLight.enabled = false;
-        }
-
-        private void UpdateStoneVisual()
-        {
-            float target = SaunaEditor.Active && StoneRednessTuning.Preview > 0
-                ? StoveTuning.MaxHeat
-                : GetHeat();
-
-            m_displayHeat = m_displayHeat < 0f
-                ? target
-                : Mathf.MoveTowards(m_displayHeat, target, 40f * Time.deltaTime);
-
-            if (m_shownHeat >= 0f && Mathf.Abs(m_displayHeat - m_shownHeat) < 0.2f)
-            {
-                return;
-            }
-
-            m_shownHeat = m_displayHeat;
-            float heat01 = Mathf.Clamp01(m_displayHeat / StoveTuning.MaxHeat);
-
-            TintStones(m_domeRenderer, StoveVisual.DomeBandWeights, heat01, 1f);
-            TintStones(m_floorRenderer, StoveVisual.FloorBandWeights, heat01, StoneRednessTuning.FloorGlowBoost);
-
-            if (m_glowLight != null)
-            {
-                float intensity = StoneRednessTuning.LightIntensity * heat01;
-                m_glowLight.intensity = intensity;
-                m_glowLight.range = StoneRednessTuning.LightRange;
-                m_glowLight.enabled = intensity > 0.01f;
-            }
-        }
-
-        /// Each material slot of the dome/floor is one heat band; its weight scales the redness.
-        private void TintStones(MeshRenderer renderer, float[] weights, float heat01, float glowScale)
-        {
-            if (renderer == null)
-            {
-                return;
-            }
-
-            if (m_stoneBlock == null)
-            {
-                m_stoneBlock = new MaterialPropertyBlock();
-            }
-
-            Material[] materials = renderer.sharedMaterials;
-            int count = Mathf.Min(materials.Length, weights.Length);
-
-            for (int i = 0; i < count; i++)
-            {
-                Material material = materials[i];
-                if (material == null)
-                {
-                    continue;
-                }
-
-                float redness = weights[i] * heat01;
-                m_stoneBlock.Clear();
-
-                if (material.HasProperty(ColorId))
-                {
-                    m_stoneBlock.SetColor(ColorId,
-                        StoneRednessTuning.Apply(material.GetColor(ColorId), redness));
-                }
-
-                if (material.HasProperty(EmissionId))
-                {
-                    m_stoneBlock.SetColor(EmissionId, StoneRednessTuning.Emission(redness) * glowScale);
-                }
-
-                renderer.SetPropertyBlock(m_stoneBlock, i);
-            }
-        }
-
-        private bool IsHot()
-        {
-            // IsBurning reads ZDO without a null check. Placement ghosts have no ZDO,
-            // so calling it would throw NullReferenceException. Treat placement ghosts as cold.
-            return m_fireplace != null
-                && m_nview != null
-                && m_nview.IsValid()
-                && m_fireplace.IsBurning();
-        }
-
-        /// Burning stove: show hot stones. Extinguished stove: show coals.
-        /// If the coal visual is unavailable, keep the hot stones visible as before.
-        private void ApplyHeat(bool hot, bool force)
-        {
-            if (!force && hot == m_wasHot)
-            {
-                return;
-            }
-
-            m_wasHot = hot;
-
-            if (m_coldStones == null)
-            {
-                if (m_hotStones != null)
-                {
-                    m_hotStones.gameObject.SetActive(true);
-                }
-                return;
-            }
-
-            if (m_hotStones != null)
-            {
-                m_hotStones.gameObject.SetActive(hot);
-            }
-
-            m_coldStones.gameObject.SetActive(!hot);
-        }
-
-        /// Nearest actually placed sauna stove used only for visual linking.
-        /// The stove placement ghost is excluded because it has no valid ZDO.
-        public static SaunaStove FindClosestForVisualLink(UnityEngine.Vector3 position, float maxDistance)
-        {
-            SaunaStove nearest = null;
-            float best = maxDistance * maxDistance;
-
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove == null || stove.m_nview == null || !stove.m_nview.IsValid())
-                {
-                    continue;
-                }
-
-                float sqr = (stove.transform.position - position).sqrMagnitude;
-                if (sqr < best)
-                {
-                    best = sqr;
-                    nearest = stove;
-                }
-            }
-
-            return nearest;
-        }
-
-        /// Anchor point for the golden connection line. This is visual only;
-        /// the stove does not need a CraftingStation or StationExtension for it.
-        public UnityEngine.Vector3 VisualLinkPoint()
-        {
-            return transform.position + UnityEngine.Vector3.up * 0.45f;
-        }
-
-        /// Sauna tier around THIS stove. Uses the same ownership/link rule as the golden line:
-        /// the accessory must be within MaxLinkDistance and this stove must be its nearest stove.
-        /// The bucket alone does not raise the tier; progression is stove -> whisks -> bucket.
-        public int GetWellSteamedSaunaTier()
-        {
-            bool hasWhisks = false;
-            bool hasBucket = false;
-
-            foreach (Piece piece in Piece.s_allPieces)
-            {
-                if (piece == null)
-                {
-                    continue;
-                }
-
-                bool isWhisks = piece.m_name == "$piece_sauna_wrisks";
-                bool isBucket = piece.m_name == "$piece_sauna_bucket";
-                if (!isWhisks && !isBucket)
-                {
-                    continue;
-                }
-
-                // Placement ghosts also have Piece components, so count only actually placed objects.
-                ZNetView nview = piece.GetComponent<ZNetView>();
-                if (nview == null || !nview.IsValid())
-                {
-                    continue;
-                }
-
-                SaunaStove linkedStove = FindClosestForVisualLink(
-                    piece.transform.position,
-                    SaunaVisualLink.MaxLinkDistance);
-
-                if (linkedStove != this)
-                {
-                    continue;
-                }
-
-                if (isWhisks)
-                {
-                    hasWhisks = true;
-                }
-                else if (isBucket)
-                {
-                    hasBucket = true;
-                }
-
-                if (hasWhisks && hasBucket)
-                {
-                    return 3;
-                }
-            }
-
-            return hasWhisks ? 2 : 1;
-        }
-
-        /// Use the nearest stove to the player when granting Well Steamed.
-        /// Steam physically originates at the stove, so 8 m leaves room for cloud movement,
-        /// while accessories are still counted only within their own 5 m link radius.
-        public static int GetWellSteamedSaunaTierNear(UnityEngine.Vector3 position)
-        {
-            const float sourceRange = 8f;
-            SaunaStove stove = FindClosestForVisualLink(position, sourceRange);
-            return stove != null ? stove.GetWellSteamedSaunaTier() : 1;
-        }
-
-        /// Returns the comfort bonus from sauna accessories around the nearest active sauna stove.
-        /// Whisks and bucket each contribute +1, but only while the player is near a stove
-        /// whose stones are at least StoveTuning.ComfortMinHeat hot.
-        /// Accessories must also be genuinely placed and linked to that stove by the normal 5 m sauna link rule.
-        public static int GetSaunaComfortBonusNear(UnityEngine.Vector3 position)
-        {
-            const float sourceRange = 8f;
-            SaunaStove activeStove = null;
-            float best = sourceRange * sourceRange;
-
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove == null || stove.GetHeat() < StoveTuning.ComfortMinHeat)
-                {
-                    continue;
-                }
-
-                float sqr = (stove.transform.position - position).sqrMagnitude;
-                if (sqr < best)
-                {
-                    best = sqr;
-                    activeStove = stove;
-                }
-            }
-
-            if (activeStove == null)
-            {
-                return 0;
-            }
-
-            bool hasWhisks = false;
-            bool hasBucket = false;
-
-            foreach (Piece piece in Piece.s_allPieces)
-            {
-                if (piece == null)
-                {
-                    continue;
-                }
-
-                bool isWhisks = piece.m_name == "$piece_sauna_wrisks";
-                bool isBucket = piece.m_name == "$piece_sauna_bucket";
-                if (!isWhisks && !isBucket)
-                {
-                    continue;
-                }
-
-                ZNetView nview = piece.GetComponent<ZNetView>();
-                if (nview == null || !nview.IsValid())
-                {
-                    continue;
-                }
-
-                SaunaStove linkedStove = FindClosestForVisualLink(
-                    piece.transform.position,
-                    SaunaVisualLink.MaxLinkDistance);
-
-                if (linkedStove != activeStove)
-                {
-                    continue;
-                }
-
-                if (isWhisks)
-                {
-                    hasWhisks = true;
-                }
-                else if (isBucket)
-                {
-                    hasBucket = true;
-                }
-
-                if (hasWhisks && hasBucket)
-                {
-                    return 2;
-                }
-            }
-
-            return (hasWhisks ? 1 : 0) + (hasBucket ? 1 : 0);
-        }
-
-        /// Editor tool: instantly consume all fuel in the nearest sauna stove.
-        /// SetFuel forwards to the owner through RPC, so it also works in multiplayer.
-        public static void ExtinguishNearest(UnityEngine.Vector3 position)
-        {
-            SaunaStove nearest = null;
-            float best = 20f * 20f;
-
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove == null || stove.m_fireplace == null)
-                {
-                    continue;
-                }
-
-                float d = (stove.transform.position - position).sqrMagnitude;
-                if (d < best)
-                {
-                    best = d;
-                    nearest = stove;
-                }
-            }
-
-            if (nearest == null)
-            {
-                Jotunn.Logger.LogInfo("extinguish: no sauna stove within 20 m");
-                return;
-            }
-
-            nearest.m_fireplace.SetFuel(0f);
-            Jotunn.Logger.LogInfo("extinguish: stove fuel set to 0");
-        }
-
-        /// Editor tool: set the stone heat of the nearest sauna stove.
-        public static void SetHeatNearest(UnityEngine.Vector3 position, float heat)
-        {
-            SaunaStove nearest = null;
-            float best = 20f * 20f;
-
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove == null || stove.m_nview == null || !stove.m_nview.IsValid())
-                {
-                    continue;
-                }
-
-                float d = (stove.transform.position - position).sqrMagnitude;
-                if (d < best)
-                {
-                    best = d;
-                    nearest = stove;
-                }
-            }
-
-            if (nearest == null)
-            {
-                Jotunn.Logger.LogInfo("set heat: no sauna stove within 20 m");
-                return;
-            }
-
-            if (!nearest.m_nview.IsOwner())
-            {
-                nearest.m_nview.ClaimOwnership();
-            }
-
-            // Restart the heat clock so the next update does not apply time from before the override.
-            ZDO zdo = nearest.m_nview.GetZDO();
-            zdo.Set(ZdoHeatTime, HeatClockTicks());
-            zdo.Set(ZdoHeat, Mathf.Clamp(heat, 0f, StoveTuning.MaxHeat));
-            Jotunn.Logger.LogInfo($"set heat: stove heat set to {heat:0}");
-        }
-
-        /// Editor: push the current fuel rules to every placed stove.
-        public static void ApplyFuelToAll()
-        {
-            foreach (SaunaStove stove in s_all)
-            {
-                if (stove != null)
-                {
-                    StoveTuning.ApplyFuel(stove.m_fireplace);
-                }
-            }
-        }
-
-        /// Stone heat from 0 to StoveTuning.MaxHeat, as last written by the owner.
-        public float GetHeat()
-        {
-            if (m_nview == null || !m_nview.IsValid())
-            {
-                return 0f;
-            }
-
-            return m_nview.GetZDO().GetFloat(ZdoHeat, 0f);
-        }
-
-        private static long HeatClockTicks()
-        {
-            return ZNet.instance != null ? ZNet.instance.GetTime().Ticks : DateTime.Now.Ticks;
-        }
-
-        /// Owner only: advance the stone heat by the time passed since the last update.
-        /// Elapsed time is measured on the network clock and stored in the ZDO, so the heat
-        /// also catches up after the area was unloaded or ownership changed hands.
-        private void UpdateStoneHeat()
-        {
-            if (m_fireplace == null || m_nview == null || !m_nview.IsValid() || !m_nview.IsOwner())
-            {
-                return;
-            }
-
-            ZDO zdo = m_nview.GetZDO();
-            long now = HeatClockTicks();
-            long last = zdo.GetLong(ZdoHeatTime, 0L);
-            zdo.Set(ZdoHeatTime, now);
-
-            if (last <= 0L || now <= last)
-            {
-                return;
-            }
-
-            float minutes = (float)((now - last) / (double)TimeSpan.TicksPerMinute);
-            float rate = m_fireplace.IsBurning()
-                ? StoveTuning.HeatPerMinute
-                : -StoveTuning.CoolPerMinute;
-
-            float heat = zdo.GetFloat(ZdoHeat, 0f);
-            zdo.Set(ZdoHeat, Mathf.Clamp(heat + rate * minutes, 0f, StoveTuning.MaxHeat));
-        }
-
+        /// Shrinks and lowers the vanilla iron firepit fire into the dome and keeps only the flames.
         private void ApplyFire()
         {
             for (int i = 0; i < m_fireRoots.Count; i++)
             {
-                Transform t = m_fireRoots[i];
-                if (t == null)
+                Transform fireRoot = m_fireRoots[i];
+                if (fireRoot == null)
                 {
                     continue;
                 }
 
-                t.localPosition = m_firePos[i] + UnityEngine.Vector3.up * StoveVisual.FireOffsetY;
-                t.localScale = m_fireScale[i] * StoveVisual.FireScale;
+                fireRoot.localPosition = m_fireRootPositions[i] + Vector3.up * StoveVisual.FireOffsetY;
+                fireRoot.localScale = m_fireRootScales[i] * StoveVisual.FireScale;
 
-                foreach (ParticleSystem ps in t.GetComponentsInChildren<ParticleSystem>(true))
+                foreach (ParticleSystem particles in fireRoot.GetComponentsInChildren<ParticleSystem>(true))
                 {
-                    ParticleSystemRenderer psr = ps.GetComponent<ParticleSystemRenderer>();
-                    if (psr != null)
+                    ParticleSystemRenderer particleRenderer = particles.GetComponent<ParticleSystemRenderer>();
+                    if (particleRenderer != null)
                     {
-                        psr.enabled = StoveVisual.KeepFlame(ps.gameObject.name);
+                        particleRenderer.enabled = StoveVisual.KeepFlame(particles.gameObject.name);
                     }
                 }
             }
 
-            // Calculate heat radius from the original value so repeated edits do not accumulate.
-            for (int i = 0; i < m_warmthColliders.Count && i < m_warmthRadii.Count; i++)
+            // Calculate heat radius from the original value so repeated rebuilds do not accumulate.
+            for (int i = 0; i < m_warmthColliders.Count; i++)
             {
                 if (m_warmthColliders[i] != null)
                 {
@@ -676,70 +681,51 @@ namespace SaunaMod
                 }
             }
 
-            // FlameSize affects the ParticleSystems currently visible for FlameSet.
-            // Scale the system transform rather than only startSize because much of the
+            // Scale the flame transforms rather than only startSize, because much of the
             // vanilla flame appearance comes from other ParticleSystem modules,
             // making startSize alone barely noticeable.
-            int count = Mathf.Min(
-                m_fireParticles.Count,
-                Mathf.Min(m_fireParticlePos.Count,
-                    Mathf.Min(m_fireParticleScale.Count, m_fireParticleStartSize.Count)));
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < m_flames.Count; i++)
             {
-                ParticleSystem ps = m_fireParticles[i];
-                if (ps == null)
+                ParticleSystem flame = m_flames[i];
+                if (flame == null)
                 {
                     continue;
                 }
 
-                bool visibleFlame = StoveVisual.KeepFlame(ps.gameObject.name);
+                // Always start from the original values so repeated rebuilds do not accumulate.
+                flame.transform.localPosition = m_flamePositions[i];
+                flame.transform.localScale = m_flameScales[i];
 
-                // Always start from the original values so editor adjustments
-                // do not accumulate on every RefreshVisual().
-                ps.transform.localPosition = m_fireParticlePos[i];
-                ps.transform.localScale = m_fireParticleScale[i];
+                ParticleSystem.MainModule main = flame.main;
+                main.startSizeMultiplier = m_flameStartSizes[i];
 
-                ParticleSystem.MainModule main = ps.main;
-                main.startSizeMultiplier = m_fireParticleStartSize[i];
-
-                if (!visibleFlame)
+                if (!StoveVisual.KeepFlame(flame.gameObject.name))
                 {
                     continue;
                 }
 
-                // If a ParticleSystem is on a separate child transform, scale that child.
-                // This changes the whole flame visual without changing the Fireplace root.
-                bool isFireRoot = false;
-                for (int r = 0; r < m_fireRoots.Count; r++)
+                if (!m_fireRoots.Contains(flame.transform))
                 {
-                    if (m_fireRoots[r] == ps.transform)
-                    {
-                        isFireRoot = true;
-                        break;
-                    }
-                }
-
-                if (!isFireRoot)
-                {
-                    ps.transform.localPosition =
-                        m_fireParticlePos[i] + UnityEngine.Vector3.up * StoveVisual.FlameOffsetY;
-                    ps.transform.localScale =
-                        m_fireParticleScale[i] * StoveVisual.FlameSize;
+                    // A flame on its own child transform: move and scale that child.
+                    flame.transform.localPosition = m_flamePositions[i] + Vector3.up * StoveVisual.FlameOffsetY;
+                    flame.transform.localScale = m_flameScales[i] * StoveVisual.FlameSize;
                 }
                 else
                 {
-                    // Rare fallback: if the ParticleSystem is directly on the Fireplace root,
-                    // leave the root untouched so heat/collider positions do not move and adjust startSize instead.
-                    main.startSizeMultiplier =
-                        m_fireParticleStartSize[i] * StoveVisual.FlameSize;
+                    // Rare fallback: a flame directly on a fire root. Leave the root untouched
+                    // so heat/collider positions do not move, and adjust startSize instead.
+                    main.startSizeMultiplier = m_flameStartSizes[i] * StoveVisual.FlameSize;
                 }
             }
         }
 
+        // =====================================================================
+        // Pouring water
+        // =====================================================================
+
         private void SetupAudio()
         {
-            AudioSource template = GetComponentInChildren<AudioSource>(true);
+            AudioSource vanillaSource = GetComponentInChildren<AudioSource>(true);
 
             m_audio = gameObject.AddComponent<AudioSource>();
             m_audio.playOnAwake = false;
@@ -749,13 +735,13 @@ namespace SaunaMod
             m_audio.minDistance = 3f;
             m_audio.maxDistance = 32f;
 
-            if (template != null)
+            if (vanillaSource != null)
             {
-                m_audio.outputAudioMixerGroup = template.outputAudioMixerGroup;
+                m_audio.outputAudioMixerGroup = vanillaSource.outputAudioMixerGroup;
             }
         }
 
-        private double NetTime()
+        private static double NetTime()
         {
             return ZNet.instance != null ? ZNet.instance.GetTimeSeconds() : Time.time;
         }
@@ -763,7 +749,7 @@ namespace SaunaMod
         public bool Pour(Humanoid user)
         {
             // Placement ghosts have no ZDO, so they have neither heat nor a pour cooldown.
-            if (m_fireplace == null || m_nview == null || !m_nview.IsValid())
+            if (m_fireplace == null || !IsPlaced())
             {
                 return false;
             }
@@ -780,9 +766,9 @@ namespace SaunaMod
             }
 
             double now = NetTime();
-            float last = m_nview.GetZDO().GetFloat(ZdoLastPour, -9999f);
+            float lastPour = m_nview.GetZDO().GetFloat(ZdoLastPour, -9999f);
 
-            if (now - last < StoveTuning.PourCooldown)
+            if (now - lastPour < StoveTuning.PourCooldown)
             {
                 if (user != null)
                 {
@@ -800,17 +786,16 @@ namespace SaunaMod
             UpdateStoneHeat();
 
             ZDO zdo = m_nview.GetZDO();
-            float heat = zdo.GetFloat(ZdoHeat, 0f);
-            zdo.Set(ZdoHeat, Mathf.Max(0f, heat - StoveTuning.PourHeatCost));
+            float heatBeforePour = zdo.GetFloat(ZdoHeat, 0f);
+            zdo.Set(ZdoHeat, Mathf.Max(0f, heatBeforePour - StoveTuning.PourHeatCost));
             zdo.Set(ZdoLastPour, (float)now);
 
             // The bucket increases the amount of steam per pour, not cloud speed or TTL.
-            // Cooler stones give less steam, measured by the heat before this pour.
-            int saunaTier = GetWellSteamedSaunaTier();
-            int cloudCount = saunaTier >= 3
+            // Cooler stones give less steam.
+            int cloudCount = GetWellSteamedSaunaTier() >= 3
                 ? SteamTuning.CloudsPerPourWithBucket
                 : SteamTuning.CloudsPerPour;
-            cloudCount = Mathf.Max(1, Mathf.RoundToInt(cloudCount * StoveTuning.SteamFactor(heat)));
+            cloudCount = Mathf.Max(1, Mathf.RoundToInt(cloudCount * StoveTuning.SteamFactor(heatBeforePour)));
 
             m_nview.InvokeRPC(ZNetView.Everybody, RpcName, cloudCount);
 
@@ -825,12 +810,12 @@ namespace SaunaMod
                 // clear feedback that the mead was released into the steam.
                 if (recipients == 0 && user != null)
                 {
-                    string fmt = Localization.instance != null
+                    string aromaFormat = Localization.instance != null
                         ? Localization.instance.Localize("$msg_sauna_mead_aroma")
                         : "The aroma of {0} fills the sauna";
                     user.Message(
                         MessageHud.MessageType.Center,
-                        string.Format(fmt, SaunaMeadSystem.LocalizedName(infusionType)));
+                        string.Format(aromaFormat, SaunaMeadSystem.LocalizedName(infusionType)));
                 }
             }
             else if (user != null)
@@ -843,14 +828,9 @@ namespace SaunaMod
 
         private void RPC_Pour(long sender, int cloudCount)
         {
-            StartBurst(cloudCount);
-        }
-
-        private void StartBurst(int cloudCount)
-        {
             m_burstCloudCount = Mathf.Max(1, cloudCount);
-            m_burstLeft = BurstDuration;
-            m_spawnAccum = 0f;
+            m_burstTimeLeft = BurstDuration;
+            m_cloudsToSpawn = 0f;
 
             if (PourClip != null && m_audio != null)
             {
@@ -858,38 +838,20 @@ namespace SaunaMod
             }
         }
 
-        private void Update()
+        /// Spreads the clouds of a pour evenly over BurstDuration.
+        private void UpdateSteamBurst()
         {
-            // There is no need to check burning every frame; twice per second is more than enough.
-            m_heatTimer -= Time.deltaTime;
-            if (m_heatTimer <= 0f)
-            {
-                m_heatTimer = 0.5f;
-                ApplyHeat(IsHot(), false);
-            }
-
-            m_stoneHeatTimer -= Time.deltaTime;
-            if (m_stoneHeatTimer <= 0f)
-            {
-                m_stoneHeatTimer = 1f;
-                UpdateStoneHeat();
-            }
-
-            UpdateStoneVisual();
-
-            if (m_burstLeft <= 0f || SteamPrefab == null)
+            if (m_burstTimeLeft <= 0f || SteamPrefab == null)
             {
                 return;
             }
 
-            m_burstLeft -= Time.deltaTime;
+            m_burstTimeLeft -= Time.deltaTime;
+            m_cloudsToSpawn += m_burstCloudCount / BurstDuration * Time.deltaTime;
 
-            float perSecond = m_burstCloudCount / BurstDuration;
-            m_spawnAccum += perSecond * Time.deltaTime;
-
-            while (m_spawnAccum >= 1f)
+            while (m_cloudsToSpawn >= 1f)
             {
-                m_spawnAccum -= 1f;
+                m_cloudsToSpawn -= 1f;
                 SpawnCloud();
             }
         }
@@ -902,13 +864,13 @@ namespace SaunaMod
                 Smoke.FadeOldest();
             }
 
-            UnityEngine.Vector2 flat = UnityEngine.Random.insideUnitCircle * BurstRadius;
-            UnityEngine.Vector3 pos = transform.position + new UnityEngine.Vector3(
+            Vector2 flat = UnityEngine.Random.insideUnitCircle * BurstRadius;
+            Vector3 position = transform.position + new Vector3(
                 flat.x,
                 BurstHeight + UnityEngine.Random.Range(0f, 0.4f),
                 flat.y);
 
-            GameObject cloud = Instantiate(SteamPrefab, pos, UnityEngine.Quaternion.identity);
+            GameObject cloud = Instantiate(SteamPrefab, position, Quaternion.identity);
             SteamTuning.Apply(cloud);
         }
     }

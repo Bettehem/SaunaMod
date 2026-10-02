@@ -31,9 +31,9 @@ namespace SaunaMod
             if (StoveTuning.ShowHeatOnHover != 0)
             {
                 float heat = stove.GetHeat();
-                string color = heat >= StoveTuning.MinPourHeat ? "orange" : "#9AA0A6";
+                string heatColor = heat >= StoveTuning.MinPourHeat ? "orange" : "#9AA0A6";
                 __result += $"\n{Localization.instance.Localize("$piece_sauna_heat")}: " +
-                    $"<color={color}><b>{Mathf.FloorToInt(heat)}</b></color> / {StoveTuning.MaxHeat:0}";
+                    $"<color={heatColor}><b>{Mathf.FloorToInt(heat)}</b></color> / {StoveTuning.MaxHeat:0}";
             }
 
             __result += "\n[<color=yellow><b>Shift + E</b></color>] " +

@@ -27,14 +27,14 @@ namespace SaunaMod
         /// At zero redness the original color is returned unchanged.
         public static Vector3 Apply(Vector3 baseColor, float redness)
         {
-            float t = Mathf.Clamp01(redness) * Mathf.Clamp01(Strength);
-            if (t <= 0f)
+            float amount = Mathf.Clamp01(redness) * Mathf.Clamp01(Strength);
+            if (amount <= 0f)
             {
                 return baseColor;
             }
 
-            Vector3 hot = Vector3.Scale(baseColor, new Vector3(TintR, TintG, TintB));
-            return Vector3.Lerp(baseColor, hot, t);
+            Vector3 hotColor = Vector3.Scale(baseColor, new Vector3(TintR, TintG, TintB));
+            return Vector3.Lerp(baseColor, hotColor, amount);
         }
     }
 }

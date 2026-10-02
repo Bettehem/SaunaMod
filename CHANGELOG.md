@@ -6,6 +6,7 @@
 * Pouring water spends stone heat, gives less steam on cooler stones and is not possible when the stones are too cold
 * The stove holds 5 wood; the pour cooldown is reduced to 5 seconds
 * Hot stones redden, glow and softly light the sauna
+* New stove interior: campfire logs that char when the fire goes out, on coals that glow while the stones are hot
 * Sauna comfort now depends on stone heat instead of the fire
 * New `Stove` config options: `MaxWood`, `HeatingSpeed`, `SteamDependsOnHeat` and `Glow`
 

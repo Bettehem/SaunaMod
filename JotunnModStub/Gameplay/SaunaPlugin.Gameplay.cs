@@ -54,7 +54,7 @@ namespace SaunaMod
                 ReadWetPenalty();
                 FindSteamVfx();
 
-                StoveVisual.CollectCandidates();
+                StoveVisual.Invalidate();
                 SaunaStove.RebuildAll();
 
                 // Player.OnSpawned normally refreshes known/build pieces through Jotunn, but

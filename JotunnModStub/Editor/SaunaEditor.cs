@@ -64,8 +64,8 @@ namespace SaunaMod
                 Name = "Sauna Stove",
                 Entries = new[]
                 {
-                    new Entry { Name = "fuel.MaxWood", Hint = "How much wood the stove holds",          Get = () => StoveTuning.MaxFuel,         Set = v => StoveTuning.MaxFuel = Mathf.Max(1, (int)v),       Step = 1f,  Integer = true, Changed = RefreshStoveFuel },
-                    new Entry { Name = "fuel.SecondsPerWood", Hint = "Seconds one piece of wood burns",   Get = () => StoveTuning.SecPerFuel,      Set = v => StoveTuning.SecPerFuel = Mathf.Max(1f, v),        Step = 5f,  Changed = RefreshStoveFuel },
+                    new Entry { Name = "fuel.MaxWood", Hint = "How much wood the stove holds",          Get = () => StoveTuning.MaxWood,         Set = v => StoveTuning.MaxWood = Mathf.Max(1, (int)v),       Step = 1f,  Integer = true, Changed = RefreshStoveFuel },
+                    new Entry { Name = "fuel.SecondsPerWood", Hint = "Seconds one piece of wood burns",   Get = () => StoveTuning.SecondsPerWood,      Set = v => StoveTuning.SecondsPerWood = Mathf.Max(1f, v),        Step = 5f,  Changed = RefreshStoveFuel },
 
                     new Entry { Name = "heat.HeatPerMinute", Hint = "Stone heat gained per minute while burning",    Get = () => StoveTuning.HeatPerMinute,   Set = v => StoveTuning.HeatPerMinute = v,                    Step = 1f },
                     new Entry { Name = "heat.CoolPerMinute", Hint = "Stone heat lost per minute without fire",    Get = () => StoveTuning.CoolPerMinute,   Set = v => StoveTuning.CoolPerMinute = v,                    Step = 1f },
@@ -86,6 +86,7 @@ namespace SaunaMod
                     new Entry { Name = "stones.LightRange", Hint = "Range of the stone light, m",     Get = () => StoneRednessTuning.LightRange,     Set = v => StoneRednessTuning.LightRange = v,                Step = 0.25f, Changed = RefreshStoneHeat },
                     // 0 = real stone heat; 1 = show the stones at 100 heat to tune the color.
                     new Entry { Name = "stones.Preview", Hint = "1 = show the stones as at 100 heat",        Get = () => StoneRednessTuning.Preview,        Set = v => StoneRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshStoneHeat },
+                    new Entry { Name = "coal.Glow",         Hint = "Coals: glow while burning or hot",        Get = () => StoneRednessTuning.CoalGlow,  Set = v => StoneRednessTuning.CoalGlow = v, Step = 0.1f, Changed = RefreshStoneHeat },
 
                     new Entry { Name = "TEST Stones heat = 100", Hint = "Set nearest stove heat to 100 (within 20 m)", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () =>
                     {
@@ -404,8 +405,6 @@ namespace SaunaMod
         private static void Dump()
         {
             Jotunn.Logger.LogInfo("===== SAUNA EDITOR DUMP BEGIN =====");
-            Jotunn.Logger.LogInfo($"stone prefab = {StoveVisual.CurrentStoneName()}");
-            Jotunn.Logger.LogInfo($"lava prefab = {StoveVisual.CurrentLavaName()}");
 
             foreach (Section section in Sections)
             {

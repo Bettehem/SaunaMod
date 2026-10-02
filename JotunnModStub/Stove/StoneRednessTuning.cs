@@ -32,6 +32,11 @@ namespace SaunaMod
         public static float LightIntensity = 1.25f;
         public static float LightRange = 2.5f;
 
+        /// Glow of the coals under the logs: full while the fire burns,
+        /// otherwise fading with the stone heat.
+        public static float CoalGlow = 0.7f;
+        public static readonly Color CoalGlowColor = new Color(1f, 0.3f, 0.05f);
+
         /// Editor only: 1 shows the stones at 100 heat, 0 = real stone heat.
         public static int Preview;
 
@@ -53,19 +58,20 @@ namespace SaunaMod
             Strength = 0.8f * scale;
             Glow = 0.5f * scale;
             LightIntensity = 1.25f * scale;
+            CoalGlow = 0.7f * scale;
         }
 
         /// Stone color for the given redness (0..1). At zero the original color is returned unchanged.
         public static Color Apply(Color baseColor, float redness)
         {
-            float t = Mathf.Clamp01(redness) * Mathf.Clamp01(Strength);
-            if (t <= 0f)
+            float amount = Mathf.Clamp01(redness) * Mathf.Clamp01(Strength);
+            if (amount <= 0f)
             {
                 return baseColor;
             }
 
-            Color hot = new Color(baseColor.r * TintR, baseColor.g * TintG, baseColor.b * TintB, baseColor.a);
-            return Color.Lerp(baseColor, hot, t);
+            Color hotColor = new Color(baseColor.r * TintR, baseColor.g * TintG, baseColor.b * TintB, baseColor.a);
+            return Color.Lerp(baseColor, hotColor, amount);
         }
 
         public static Color Emission(float redness)

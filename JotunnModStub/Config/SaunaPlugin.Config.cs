@@ -290,7 +290,7 @@ namespace SaunaMod
             SteamTuning.CloudsPerPourWithBucket = Mathf.Max(1, _cfgCloudsPerPourWithBucket.Value);
             SteamTuning.MaxClouds = Mathf.Max(10, _cfgMaxClouds.Value);
 
-            StoveTuning.MaxFuel = Mathf.Max(1, _cfgStoveMaxWood.Value);
+            StoveTuning.MaxWood = Mathf.Max(1, _cfgStoveMaxWood.Value);
             StoveTuning.ApplyHeatingSpeed(_cfgStoveHeatingSpeed.Value);
             StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
             StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);

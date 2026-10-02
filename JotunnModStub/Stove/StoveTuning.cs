@@ -15,10 +15,10 @@ namespace SaunaMod
         public const float MaxHeat = 100f;
 
         /// Wood capacity of the stove.
-        public static int MaxFuel = 5;
+        public static int MaxWood = 5;
 
         /// Seconds one piece of wood burns.
-        public static float SecPerFuel = 60f;
+        public static float SecondsPerWood = 60f;
 
         /// Heat gained per minute while the stove is burning.
         /// 20 heats the stones from 0 to 100 in five minutes, exactly one full load of wood.
@@ -95,8 +95,8 @@ namespace SaunaMod
                 return;
             }
 
-            fireplace.m_maxFuel = Mathf.Max(1, MaxFuel);
-            fireplace.m_secPerFuel = Mathf.Max(1f, SecPerFuel);
+            fireplace.m_maxFuel = Mathf.Max(1, MaxWood);
+            fireplace.m_secPerFuel = Mathf.Max(1f, SecondsPerWood);
             fireplace.m_startFuel = Mathf.Min(fireplace.m_startFuel, fireplace.m_maxFuel);
         }
     }
