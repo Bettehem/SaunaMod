@@ -150,7 +150,7 @@ namespace SaunaMod
         private static SaunaStove FindNearest(Vector3 position, float maxDistance, Func<SaunaStove, bool> filter)
         {
             SaunaStove nearest = null;
-            float bestDistanceSqr = maxDistance * maxDistance;
+            float nearestStoveDistanceSqr = maxDistance * maxDistance;
 
             foreach (SaunaStove stove in s_all)
             {
@@ -160,9 +160,9 @@ namespace SaunaMod
                 }
 
                 float distanceSqr = (stove.transform.position - position).sqrMagnitude;
-                if (distanceSqr < bestDistanceSqr)
+                if (distanceSqr < nearestStoveDistanceSqr)
                 {
-                    bestDistanceSqr = distanceSqr;
+                    nearestStoveDistanceSqr = distanceSqr;
                     nearest = stove;
                 }
             }
