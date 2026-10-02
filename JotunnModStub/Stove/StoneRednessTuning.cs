@@ -12,7 +12,7 @@ namespace SaunaMod
     internal static class StoneRednessTuning
     {
         /// How red the hottest stones get at 100 heat: 0 = never changes, 1 = full Tint.
-        public static float Strength = 0.8f;
+        public static float Strength = 0.9f;
 
         /// Multiplier applied to the stone color at full strength.
         public const float TintR = 1.5f;
@@ -21,7 +21,7 @@ namespace SaunaMod
 
         /// Self-illumination of the hottest stones at 100 heat. Works only if the stone shader
         /// has an emission color; the point light below works regardless.
-        public static float Glow = 0.5f;
+        public static float Glow = 0.55f;
 
         /// Extra glow multiplier for the floor stones. Their weight already fades to zero
         /// at the edge, so this mostly brightens the center under the fire.
@@ -29,8 +29,8 @@ namespace SaunaMod
 
         /// Point light inside the dome at 100 heat. Unlike the fire light, it stays on
         /// while the stones are hot, also after the fire has gone out.
-        public static float LightIntensity = 1.25f;
-        public static float LightRange = 2.5f;
+        public static float LightIntensity = 1.6f;
+        public static float LightRange = 3.5f;
 
         /// Glow of the coals under the logs: full while the fire burns,
         /// otherwise fading with the stone heat.
@@ -55,9 +55,9 @@ namespace SaunaMod
         {
             float scale = glow == StoveGlow.Dim ? 0.5f : 1f;
 
-            Strength = 0.8f * scale;
-            Glow = 0.5f * scale;
-            LightIntensity = 1.25f * scale;
+            Strength = 0.9f * scale;
+            Glow = 0.55f * scale;
+            LightIntensity = 1.6f * scale;
             CoalGlow = 0.7f * scale;
         }
 

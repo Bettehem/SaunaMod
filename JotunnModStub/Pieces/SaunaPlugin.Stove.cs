@@ -60,6 +60,9 @@ namespace SaunaMod
                 }
 
                 fireplace.m_disableCoverCheck = true;
+
+                // The hover text starts with the Fireplace's own name, "Fire" by default.
+                fireplace.m_name = "$piece_sauna_stove";
                 StoveTuning.ApplyFuel(fireplace);
 
                 // Keep the visual and Fireplace from fire_pit_iron, but use placement and durability rules
