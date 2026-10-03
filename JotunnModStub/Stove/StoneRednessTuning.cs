@@ -11,7 +11,10 @@ namespace SaunaMod
     /// get the full effect, the bottom dome layer and the floor edge stay untouched.
     internal static class StoneRednessTuning
     {
-        /// How red the hottest stones get at 100 heat: 0 = never changes, 1 = full Tint.
+        /// Stone heat at which redness, glow and light are full. Hotter stones look the same.
+        public const float FullGlowHeat = 100f;
+
+        /// How red the hottest stones get at full glow: 0 = never changes, 1 = full Tint.
         public static float Strength = 0.9f;
 
         /// Multiplier applied to the stone color at full strength.

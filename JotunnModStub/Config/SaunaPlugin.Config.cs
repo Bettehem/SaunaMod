@@ -169,7 +169,7 @@ namespace SaunaMod
                 "TooHotWeapons",
                 true,
                 SyncedConfigDescription(
-                    "Holding weapons while steaming in the sauna will trigger the Too Hot status effect"));
+                    "If enabled, holding a weapon, bow or shield while steaming also triggers the Too hot status effect, like wearing clothes."));
 
             _cfgWellSteamedTier1Minutes = _saunaConfig.Bind(
                 "WellSteamed",

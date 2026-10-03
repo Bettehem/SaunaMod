@@ -480,8 +480,10 @@ namespace SaunaMod
                 ? targetHeat
                 : Mathf.MoveTowards(m_displayHeat, targetHeat, 40f * Time.deltaTime);
 
-            // 0 = cold stones, 1 = fully heated.
-            float stoneHeat = Mathf.Clamp01(m_displayHeat / StoveTuning.MaxHeat);
+            // 0 = cold stones, 1 = full glow. The glow is full at FullGlowHeat and does not grow
+            // beyond it when MaxHeat is set higher; with a lower MaxHeat it is full at MaxHeat.
+            float fullGlowHeat = Mathf.Min(StoneRednessTuning.FullGlowHeat, StoveTuning.MaxHeat);
+            float stoneHeat = Mathf.Clamp01(m_displayHeat / fullGlowHeat);
             UpdateCoalGlow(stoneHeat);
 
             if (m_shownHeat >= 0f && Mathf.Abs(m_displayHeat - m_shownHeat) < 0.2f)

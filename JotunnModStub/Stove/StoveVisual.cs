@@ -493,7 +493,7 @@ namespace SaunaMod
         {
             BuildPart(parent, FloorName, GetFloorMesh);
             BuildPart(parent, DomeName, GetDomeMesh);
-            BuildPart(parent, CoalName, GetCoalMesh);
+            BuildPart(parent, CoalName, GetCoalMesh, castShadows: false);
             BuildCampfire(parent);
         }
 
@@ -596,7 +596,9 @@ namespace SaunaMod
                 part.AddComponent<MeshFilter>().sharedMesh = sourceFilter.sharedMesh;
                 MeshRenderer partRenderer = part.AddComponent<MeshRenderer>();
                 partRenderer.sharedMaterials = sourceRenderer.sharedMaterials;
-                partRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+                // The logs sit inside the fire; their shadows would streak across the light from the opening.
+                partRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
 
             if (!_campfireLogged)
@@ -608,7 +610,7 @@ namespace SaunaMod
 
         private delegate Mesh MeshGetter(out Material[] materials);
 
-        private static void BuildPart(Transform parent, string name, MeshGetter getMesh)
+        private static void BuildPart(Transform parent, string name, MeshGetter getMesh, bool castShadows = true)
         {
             RemoveOld(parent, name);
 
@@ -629,7 +631,9 @@ namespace SaunaMod
 
             MeshRenderer partRenderer = part.AddComponent<MeshRenderer>();
             partRenderer.sharedMaterials = materials;
-            partRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            partRenderer.shadowCastingMode = castShadows
+                ? UnityEngine.Rendering.ShadowCastingMode.On
+                : UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         /// Whether this vanilla fire particle system stays visible: the low and high flames do,
