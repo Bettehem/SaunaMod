@@ -26,6 +26,7 @@ namespace SaunaMod
             AddSaunaStove();
             AddSaunaWrisks();
             AddSaunaBucket();
+            AddSaunaTowelRack();
             AddPlayerComponent();
 
             // The whisks are the only SaunaMod piece assembled through Jotunn Kitbash.

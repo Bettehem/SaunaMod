@@ -51,7 +51,7 @@ namespace SaunaMod
                 "EnableSaunaComfort",
                 true,
                 SyncedConfigDescription(
-                    "Enables conditional sauna comfort. Whisks and bucket each add +1 comfort only near a sauna stove with hot stones while sheltered."));
+                    "Enables conditional sauna comfort. Whisks, bucket and towel rack each add +1 comfort only near a sauna stove with hot stones while sheltered."));
 
             _cfgStoveMaxWood = _saunaConfig.Bind(
                 "Stove",
@@ -138,6 +138,13 @@ namespace SaunaMod
                 DefaultBucketRecipe,
                 SyncedConfigDescription(
                     "Crafting recipe for the sauna bucket. Format: ItemPrefab:Amount,ItemPrefab:Amount. Example: Iron:5,FineWood:10."));
+
+            _cfgTowelRackRecipe = _saunaConfig.Bind(
+                "Recipes",
+                "SaunaTowelRack",
+                DefaultTowelRackRecipe,
+                SyncedConfigDescription(
+                    "Crafting recipe for the sauna towel rack. Format: ItemPrefab:Amount,ItemPrefab:Amount. Example: FineWood:5,WolfPelt:5."));
 
             _cfgSteamTimeToBuff = _saunaConfig.Bind(
                 "Gameplay",
@@ -454,6 +461,10 @@ namespace SaunaMod
             ? _cfgBucketRecipe.Value
             : DefaultBucketRecipe;
 
+        private string TowelRackRecipeValue => _cfgTowelRackRecipe != null
+            ? _cfgTowelRackRecipe.Value
+            : DefaultTowelRackRecipe;
+
         /// <summary>
         /// Applies synchronized recipe changes to already registered prefabs as well.
         /// This matters on multiplayer clients because server config can arrive after local prefab creation.
@@ -467,6 +478,7 @@ namespace SaunaMod
 
             ApplyRecipeToPiece(_stovePrefab, StoveRecipeValue, DefaultStoveRecipe, "sauna_stove");
             ApplyRecipeToPiece(_bucketPrefab, BucketRecipeValue, DefaultBucketRecipe, "sauna_bucket");
+            ApplyRecipeToPiece(_towelRackPrefab, TowelRackRecipeValue, DefaultTowelRackRecipe, "sauna_towel_rack");
 
             GameObject runtimeWhisks = ResolveSaunaWrisksRuntimePrefab();
             if (runtimeWhisks != null)

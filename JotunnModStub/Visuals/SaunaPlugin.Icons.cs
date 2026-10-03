@@ -314,6 +314,22 @@ namespace SaunaMod
                 "bucket");
         }
 
+        /// Redraws the towel rack icon from the actual assembled model.
+        public static void RefreshTowelRackIcon()
+        {
+            RefreshVisualPieceIcon(
+                _towelRackPrefab,
+                TowelRackVisualRootName,
+                SaunaPieceIconTuning.TowelRackYaw,
+                SaunaPieceIconTuning.TowelRackPitch,
+                SaunaPieceIconTuning.TowelRackRoll,
+                SaunaPieceIconTuning.TowelRackOffsetX,
+                SaunaPieceIconTuning.TowelRackOffsetY,
+                SaunaPieceIconTuning.TowelRackDistance,
+                SaunaPieceIconTuning.TowelRackScale,
+                "towel_rack");
+        }
+
         private static void RefreshVisualPieceIcon(
             GameObject piecePrefab,
             string visualRootName,
@@ -477,6 +493,16 @@ namespace SaunaMod
                           $"d{SaunaPieceIconTuning.BucketDistance:0.###}_" +
                           $"s{SaunaPieceIconTuning.BucketScale:0.###}.png";
             DumpIconForPrefab(_bucketPrefab, file, "bucket");
+        }
+
+        public static void DumpTowelRackIcon()
+        {
+            string file = $"towel_rack_render_y{SaunaPieceIconTuning.TowelRackYaw:0.###}_" +
+                          $"p{SaunaPieceIconTuning.TowelRackPitch:0.###}_" +
+                          $"r{SaunaPieceIconTuning.TowelRackRoll:0.###}_" +
+                          $"d{SaunaPieceIconTuning.TowelRackDistance:0.###}_" +
+                          $"s{SaunaPieceIconTuning.TowelRackScale:0.###}.png";
+            DumpIconForPrefab(_towelRackPrefab, file, "towel_rack");
         }
 
         private static void DumpIconForPrefab(GameObject prefab, string fileName, string label)

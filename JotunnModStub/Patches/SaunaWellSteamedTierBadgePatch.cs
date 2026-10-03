@@ -58,7 +58,7 @@ namespace SaunaMod
                 return;
             }
 
-            int tier = Mathf.Clamp(live.SaunaTier, 1, 3);
+            int tier = Mathf.Clamp(live.SaunaTier, 1, 4);
 
             // HUD does not expose a direct StatusEffect -> Image reference,
             // so locate the active Image reliably by the unique sprite of our effect.

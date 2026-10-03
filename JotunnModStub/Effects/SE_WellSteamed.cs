@@ -26,9 +26,9 @@ namespace SaunaMod
         /// the remaining time is almost never exactly on a tier boundary.
         public int TimeTier;
 
-        /// Tier of the sauna itself, 1..3. Do not confuse it with TimeTier:
-        /// 1 = stove only, 2 = stove + whisks, 3 = stove + whisks + bucket.
-        /// At the moment the tiers differ only in displayed state; the core effect mechanics are the same.
+        /// Tier of the sauna itself, 1..4. Do not confuse it with TimeTier:
+        /// 1 = stove only, 2 = stove + whisks, 3 = stove + whisks + bucket, 4 = all of them + towel rack.
+        /// Tier 2 makes wetness harmless; tier 4 adds the climbing and freezing bonuses (TowelRackTuning).
         public int SaunaTier = 1;
 
         public static float WetStaminaMultiplier = 1f;
@@ -63,6 +63,40 @@ namespace SaunaMod
             {
                 eitrRegen /= WetEitrMultiplier;
             }
+        }
+
+        /// Tier 4: running uphill on a slope costs less stamina.
+        public override void ModifyRunStaminaDrain(float baseDrain, ref float drain, Vector3 dir)
+        {
+            base.ModifyRunStaminaDrain(baseDrain, ref drain, dir);
+
+            if (HasClimbingBonus() && TowelRackTuning.GroundSlope(m_character) >= TowelRackTuning.ClimbMinSlope)
+            {
+                // The ground normal leans downhill, so moving against it is moving uphill.
+                Vector3 downhill = m_character.m_lastGroundNormal;
+                downhill.y = 0f;
+                if (Vector3.Dot(dir, downhill) < 0f)
+                {
+                    drain -= baseDrain * (1f - Mathf.Clamp01(TowelRackTuning.ClimbStaminaMultiplier));
+                }
+            }
+        }
+
+        /// Tier 4: jumping on a slope costs less stamina.
+        public override void ModifyJumpStaminaUsage(float baseStaminaUse, ref float staminaUse)
+        {
+            base.ModifyJumpStaminaUsage(baseStaminaUse, ref staminaUse);
+
+            if (HasClimbingBonus() && TowelRackTuning.GroundSlope(m_character) >= TowelRackTuning.ClimbMinSlope)
+            {
+                staminaUse -= baseStaminaUse * (1f - Mathf.Clamp01(TowelRackTuning.ClimbStaminaMultiplier));
+            }
+        }
+
+        private bool HasClimbingBonus()
+        {
+            return TowelRackTuning.Enabled != 0 && SaunaTier >= TowelRackTuning.SaunaTier &&
+                m_character != null && m_character == Player.m_localPlayer;
         }
 
         private bool IsWet()

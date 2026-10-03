@@ -29,6 +29,7 @@ namespace SaunaMod
         private const string DefaultStoveRecipe = "Wood:10,Coal:5,Stone:40";
         private const string DefaultWhisksRecipe = "FineWood:5,BronzeNails:1";
         private const string DefaultBucketRecipe = "Iron:5,FineWood:10";
+        private const string DefaultTowelRackRecipe = "FineWood:5,WolfPelt:5";
 
         private const int SteamLayer = 30;
         private const int SmokeLayer = 31;
@@ -60,6 +61,7 @@ namespace SaunaMod
         private ConfigEntry<string> _cfgStoveRecipe;
         private ConfigEntry<string> _cfgWhisksRecipe;
         private ConfigEntry<string> _cfgBucketRecipe;
+        private ConfigEntry<string> _cfgTowelRackRecipe;
 
         private ConfigEntry<float> _cfgSteamTimeToBuff;
         private ConfigEntry<float> _cfgSteamHealPerSecond;
@@ -101,6 +103,7 @@ namespace SaunaMod
         private static GameObject _wrisksPrefab;
         private static Sprite _wrisksFallbackIcon;
         private static GameObject _bucketPrefab;
+        private static GameObject _towelRackPrefab;
         private static int _iconRenderCount;
         private static SaunaPlugin _instance;
 

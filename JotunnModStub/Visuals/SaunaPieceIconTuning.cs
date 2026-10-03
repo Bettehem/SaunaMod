@@ -38,5 +38,15 @@ namespace SaunaMod
         public static float BucketOffsetY = 0f;
         public static float BucketDistance = 0f;
         public static float BucketScale = 1f;
+
+        // Starting view, same facing as the whisks: the side away from the wall turned
+        // towards the camera. Not yet tuned in the editor.
+        public static float TowelRackYaw = 285f;
+        public static float TowelRackPitch = 0f;
+        public static float TowelRackRoll = 0f;
+        public static float TowelRackOffsetX = 0f;
+        public static float TowelRackOffsetY = 0f;
+        public static float TowelRackDistance = 0f;
+        public static float TowelRackScale = 1f;
     }
 }
