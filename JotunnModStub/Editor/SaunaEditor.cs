@@ -67,8 +67,10 @@ namespace SaunaMod
                     new Entry { Name = "fuel.MaxWood", Hint = "How much wood the stove holds",          Get = () => StoveTuning.MaxWood,         Set = v => StoveTuning.MaxWood = Mathf.Max(1, (int)v),       Step = 1f,  Integer = true, Changed = RefreshStoveFuel },
                     new Entry { Name = "fuel.SecondsPerWood", Hint = "Seconds one piece of wood burns",   Get = () => StoveTuning.SecondsPerWood,      Set = v => StoveTuning.SecondsPerWood = Mathf.Max(1f, v),        Step = 5f,  Changed = RefreshStoveFuel },
 
+                    new Entry { Name = "heat.MaxHeat", Hint = "Highest stone heat",                         Get = () => StoveTuning.MaxHeat,             Set = v => StoveTuning.MaxHeat = Mathf.Max(1f, v),   Step = 10f, Changed = RefreshStoneHeat },
                     new Entry { Name = "heat.HeatPerMinute", Hint = "Stone heat gained per minute while burning",    Get = () => StoveTuning.HeatPerMinute,   Set = v => StoveTuning.HeatPerMinute = v,                    Step = 1f },
-                    new Entry { Name = "heat.CoolPerMinute", Hint = "Stone heat lost per minute without fire",    Get = () => StoveTuning.CoolPerMinute,   Set = v => StoveTuning.CoolPerMinute = v,                    Step = 1f },
+                    new Entry { Name = "heat.CoolPerMinute", Hint = "Stone heat lost per minute once cooling starts",    Get = () => StoveTuning.CoolPerMinute,   Set = v => StoveTuning.CoolPerMinute = v,                    Step = 1f },
+                    new Entry { Name = "heat.CoolingDelay", Hint = "Seconds stones stay hot after the fire is out", Get = () => StoveTuning.CoolingDelaySeconds, Set = v => StoveTuning.CoolingDelaySeconds = v,             Step = 10f },
                     new Entry { Name = "heat.PourCost", Hint = "Heat spent by one pour",         Get = () => StoveTuning.PourHeatCost,    Set = v => StoveTuning.PourHeatCost = v,                     Step = 1f },
                     new Entry { Name = "heat.MinToPour", Hint = "Below this heat pouring is not possible",        Get = () => StoveTuning.MinPourHeat,     Set = v => StoveTuning.MinPourHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
                     // 0 = hidden; 1 = show the stone heat when hovering over the stove.
@@ -76,19 +78,19 @@ namespace SaunaMod
 
                     new Entry { Name = "heat.ComfortMinHeat", Hint = "Whisks and bucket give comfort from this heat",   Get = () => StoveTuning.ComfortMinHeat,  Set = v => StoveTuning.ComfortMinHeat = Mathf.Min(StoveTuning.MaxHeat, v), Step = 5f },
 
-                    // Share of the steam a pour gives at 0 heat; at 100 heat it is always the full amount.
-                    new Entry { Name = "pour.SteamAtZeroHeat", Hint = "Share of steam at 0 heat (full steam at 100)",  Get = () => StoveTuning.SteamAtZeroHeat, Set = v => StoveTuning.SteamAtZeroHeat = Mathf.Clamp01(v), Step = 0.05f },
+                    // Share of the steam a pour gives at 0 heat; at max heat it is always the full amount.
+                    new Entry { Name = "pour.SteamAtZeroHeat", Hint = "Share of steam at 0 heat (full steam at max)",  Get = () => StoveTuning.SteamAtZeroHeat, Set = v => StoveTuning.SteamAtZeroHeat = Mathf.Clamp01(v), Step = 0.05f },
                     new Entry { Name = "pour.Cooldown", Hint = "Seconds between pours",         Get = () => StoveTuning.PourCooldown,    Set = v => StoveTuning.PourCooldown = v,                     Step = 0.5f },
 
-                    new Entry { Name = "stones.MaxRedness", Hint = "Redness of the hottest stones at 100 heat",     Get = () => StoneRednessTuning.Strength,       Set = v => StoneRednessTuning.Strength = Mathf.Clamp01(v),   Step = 0.05f, Changed = RefreshStoneHeat },
-                    new Entry { Name = "stones.Glow", Hint = "Self-glow of the stones at 100 heat",           Get = () => StoneRednessTuning.Glow,           Set = v => StoneRednessTuning.Glow = v,                      Step = 0.05f, Changed = RefreshStoneHeat },
-                    new Entry { Name = "stones.LightIntensity", Hint = "Brightness of the stone light at 100 heat", Get = () => StoneRednessTuning.LightIntensity, Set = v => StoneRednessTuning.LightIntensity = v,            Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.MaxRedness", Hint = "Redness of the hottest stones at max heat",     Get = () => StoneRednessTuning.Strength,       Set = v => StoneRednessTuning.Strength = Mathf.Clamp01(v),   Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.Glow", Hint = "Self-glow of the stones at max heat",           Get = () => StoneRednessTuning.Glow,           Set = v => StoneRednessTuning.Glow = v,                      Step = 0.05f, Changed = RefreshStoneHeat },
+                    new Entry { Name = "stones.LightIntensity", Hint = "Brightness of the stone light at max heat", Get = () => StoneRednessTuning.LightIntensity, Set = v => StoneRednessTuning.LightIntensity = v,            Step = 0.05f, Changed = RefreshStoneHeat },
                     new Entry { Name = "stones.LightRange", Hint = "Range of the stone light, m",     Get = () => StoneRednessTuning.LightRange,     Set = v => StoneRednessTuning.LightRange = v,                Step = 0.25f, Changed = RefreshStoneHeat },
-                    // 0 = real stone heat; 1 = show the stones at 100 heat to tune the color.
-                    new Entry { Name = "stones.Preview", Hint = "1 = show the stones as at 100 heat",        Get = () => StoneRednessTuning.Preview,        Set = v => StoneRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshStoneHeat },
+                    // 0 = real stone heat; 1 = show the stones at max heat to tune the color.
+                    new Entry { Name = "stones.Preview", Hint = "1 = show the stones as at max heat",        Get = () => StoneRednessTuning.Preview,        Set = v => StoneRednessTuning.Preview = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true, Changed = RefreshStoneHeat },
                     new Entry { Name = "coal.Glow",         Hint = "Coals: glow while burning or hot",        Get = () => StoneRednessTuning.CoalGlow,  Set = v => StoneRednessTuning.CoalGlow = v, Step = 0.1f, Changed = RefreshStoneHeat },
 
-                    new Entry { Name = "TEST Stones heat = 100", Hint = "Set nearest stove heat to 100 (within 20 m)", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () =>
+                    new Entry { Name = "TEST Stones heat = max", Hint = "Set nearest stove to max heat (within 20 m)", Get = () => 0f, Step = 1f, ActionOnly = true, Trigger = () =>
                     {
                         if (Player.m_localPlayer != null)
                         {

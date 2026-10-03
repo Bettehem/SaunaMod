@@ -66,16 +66,41 @@ namespace SaunaMod
                 "HeatingSpeed",
                 StoveTuning.HeatingSpeed.Standard,
                 SyncedConfigDescription(
-                    "How the stove stones heat up and spend heat. " +
-                    "Standard: 0 to 100 heat in 5 minutes, a pour costs 20, cooling 15 per minute. " +
-                    "Fast: 0 to 100 heat in 3 min 20 s, a pour costs 15, cooling 10 per minute."));
+                    "How fast the stove stones heat up and how much heat a pour spends. " +
+                    "Standard: 20 heat per minute (0 to 100 in 5 minutes), a pour costs 20. " +
+                    "Fast: 30 heat per minute (0 to 100 in 3 min 20 s), a pour costs 15."));
+
+            _cfgStoveMaxHeat = _saunaConfig.Bind(
+                "Stove",
+                "MaxHeat",
+                100f,
+                SyncedConfigDescription(
+                    "Highest stone heat. Pouring needs at least 50 heat, so a higher maximum gives more pours " +
+                    "from one full heat-up, but the stones also take longer to get there.",
+                    new AcceptableValueRange<float>(60f, 1000f)));
+
+            _cfgStoveCoolPerMinute = _saunaConfig.Bind(
+                "Stove",
+                "CoolPerMinute",
+                5f,
+                SyncedConfigDescription(
+                    "Stone heat lost per minute once the stones start cooling. 5 cools 100 heat down to 0 in 20 minutes.",
+                    new AcceptableValueRange<float>(0f, 100f)));
+
+            _cfgStoveCoolingDelaySeconds = _saunaConfig.Bind(
+                "Stove",
+                "CoolingDelaySeconds",
+                60f,
+                SyncedConfigDescription(
+                    "Seconds the stones keep their heat after the fire goes out before they start cooling.",
+                    new AcceptableValueRange<float>(0f, 3600f)));
 
             _cfgStoveSteamDependsOnHeat = _saunaConfig.Bind(
                 "Stove",
                 "SteamDependsOnHeat",
                 true,
                 SyncedConfigDescription(
-                    "If enabled, cooler stones give less steam per pour: the full amount at 100 heat, " +
+                    "If enabled, cooler stones give less steam per pour: the full amount at max heat, " +
                     "falling linearly towards half at 0 heat. If disabled, every pour gives the full amount."));
 
             // Purely visual, so every player picks it locally instead of following the server.
@@ -292,6 +317,9 @@ namespace SaunaMod
 
             StoveTuning.MaxWood = Mathf.Max(1, _cfgStoveMaxWood.Value);
             StoveTuning.ApplyHeatingSpeed(_cfgStoveHeatingSpeed.Value);
+            StoveTuning.MaxHeat = Mathf.Max(1f, _cfgStoveMaxHeat.Value);
+            StoveTuning.CoolPerMinute = Mathf.Max(0f, _cfgStoveCoolPerMinute.Value);
+            StoveTuning.CoolingDelaySeconds = Mathf.Max(0f, _cfgStoveCoolingDelaySeconds.Value);
             StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
             StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);
             SaunaStove.ApplyFuelToAll();

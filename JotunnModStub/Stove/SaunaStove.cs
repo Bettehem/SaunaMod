@@ -12,6 +12,7 @@ namespace SaunaMod
         public const string ZdoLastPour = "sauna_lastpour";
         public const string ZdoHeat = "sauna_heat";
         public const string ZdoHeatTime = "sauna_heat_time";
+        public const string ZdoFireOutTime = "sauna_fire_out_time";
 
         public static GameObject SteamPrefab;
         public static AudioClip PourClip;
@@ -387,13 +388,39 @@ namespace SaunaMod
                 return;
             }
 
-            float minutes = (float)((nowTicks - lastTicks) / (double)TimeSpan.TicksPerMinute);
-            float heatPerMinute = m_fireplace.IsBurning()
-                ? StoveTuning.HeatPerMinute
-                : -StoveTuning.CoolPerMinute;
-
             float heat = zdo.GetFloat(ZdoHeat, 0f);
-            zdo.Set(ZdoHeat, Mathf.Clamp(heat + heatPerMinute * minutes, 0f, StoveTuning.MaxHeat));
+
+            if (m_fireplace.IsBurning())
+            {
+                zdo.Set(ZdoFireOutTime, 0L);
+                heat += StoveTuning.HeatPerMinute * TicksToMinutes(nowTicks - lastTicks);
+            }
+            else
+            {
+                // Remember when the fire went out; the stones hold their heat for CoolingDelaySeconds
+                // after that and only cool for the part of this interval that comes later.
+                long fireOutTicks = zdo.GetLong(ZdoFireOutTime, 0L);
+                if (fireOutTicks <= 0L)
+                {
+                    fireOutTicks = lastTicks;
+                    zdo.Set(ZdoFireOutTime, fireOutTicks);
+                }
+
+                long delayTicks = (long)(Mathf.Max(0f, StoveTuning.CoolingDelaySeconds) * TimeSpan.TicksPerSecond);
+                long coolingStartTicks = Math.Max(lastTicks, fireOutTicks + delayTicks);
+
+                if (nowTicks > coolingStartTicks)
+                {
+                    heat -= StoveTuning.CoolPerMinute * TicksToMinutes(nowTicks - coolingStartTicks);
+                }
+            }
+
+            zdo.Set(ZdoHeat, Mathf.Clamp(heat, 0f, StoveTuning.MaxHeat));
+        }
+
+        private static float TicksToMinutes(long ticks)
+        {
+            return (float)(ticks / (double)TimeSpan.TicksPerMinute);
         }
 
         // =====================================================================

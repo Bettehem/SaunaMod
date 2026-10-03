@@ -6,13 +6,13 @@ namespace SaunaMod
 {
     /// Fuel, stone-heat and pour rules of the sauna stove. Tuned live from the editor.
     ///
-    /// The stones heat up while the stove burns and cool down while it does not.
-    /// Every pour turns part of that heat into steam; below MinPourHeat the stones
-    /// are too cold to produce steam.
+    /// The stones heat up while the stove burns. After the fire goes out they hold their heat
+    /// for CoolingDelaySeconds, then cool down. Every pour turns part of that heat into steam;
+    /// below MinPourHeat the stones are too cold to produce steam.
     internal static class StoveTuning
     {
         /// Upper bound of the stone heat scale.
-        public const float MaxHeat = 100f;
+        public static float MaxHeat = 100f;
 
         /// Wood capacity of the stove.
         public static int MaxWood = 5;
@@ -24,8 +24,12 @@ namespace SaunaMod
         /// 20 heats the stones from 0 to 100 in five minutes, exactly one full load of wood.
         public static float HeatPerMinute = 20f;
 
-        /// Heat lost per minute while the stove is not burning.
-        public static float CoolPerMinute = 15f;
+        /// Heat lost per minute once the stove has been out for CoolingDelaySeconds.
+        /// 5 cools fully heated stones from 100 to 0 in 20 minutes.
+        public static float CoolPerMinute = 5f;
+
+        /// Seconds the stones keep their heat after the fire goes out before they start cooling.
+        public static float CoolingDelaySeconds = 60f;
 
         /// Heat consumed by one pour.
         public static float PourHeatCost = 20f;
@@ -68,21 +72,20 @@ namespace SaunaMod
             Fast
         }
 
-        /// Heat, cooling and pour cost for the chosen preset (cfg Stove.HeatingSpeed).
-        /// Fast: the stones heat in 3 min 20 s instead of 5 min, cool slower and give 4 pours instead of 3.
+        /// Heating and pour cost for the chosen preset (cfg Stove.HeatingSpeed).
+        /// Fast: the stones heat in 3 min 20 s instead of 5 min and give 4 pours instead of 3.
+        /// Cooling is a separate setting (cfg Stove.CoolPerMinute).
         public static void ApplyHeatingSpeed(HeatingSpeed speed)
         {
             switch (speed)
             {
                 case HeatingSpeed.Fast:
                     HeatPerMinute = 30f;
-                    CoolPerMinute = 10f;
                     PourHeatCost = 15f;
                     break;
 
                 default:
                     HeatPerMinute = 20f;
-                    CoolPerMinute = 15f;
                     PourHeatCost = 20f;
                     break;
             }

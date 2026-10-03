@@ -2,13 +2,13 @@
 
 ## 2.2.0
 
-* Added **stone heat**: the stones heat up while the stove burns and cool down after the fire goes out
+* Added **stone heat**: the stones heat up while the stove burns, stay hot for a minute after the fire goes out and then slowly cool down
 * Pouring water spends stone heat, gives less steam on cooler stones and is not possible when the stones are too cold
 * The stove holds 5 wood; the pour cooldown is reduced to 5 seconds
 * Hot stones redden, glow and softly light the sauna
 * New stove interior: campfire logs that char when the fire goes out, on coals that glow while the stones are hot
 * Sauna comfort now depends on stone heat instead of the fire
-* New `Stove` config options: `MaxWood`, `HeatingSpeed`, `SteamDependsOnHeat` and `Glow`
+* New `Stove` config options: `MaxWood`, `HeatingSpeed`, `MaxHeat`, `CoolPerMinute`, `CoolingDelaySeconds`, `SteamDependsOnHeat` and `Glow`
 
 ## 2.1.0
 
