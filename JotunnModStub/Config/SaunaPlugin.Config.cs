@@ -51,7 +51,72 @@ namespace SaunaMod
                 "EnableSaunaComfort",
                 true,
                 SyncedConfigDescription(
-                    "Enables conditional sauna comfort. Whisks and bucket each add +1 comfort only near a burning sauna stove while sheltered."));
+                    "Enables conditional sauna comfort. Whisks and bucket each add +1 comfort only near a sauna stove with hot stones while sheltered."));
+
+            _cfgStoveMaxWood = _saunaConfig.Bind(
+                "Stove",
+                "MaxWood",
+                5,
+                SyncedConfigDescription(
+                    "How much wood the sauna stove holds. One piece burns for 60 seconds.",
+                    new AcceptableValueRange<int>(1, 50)));
+
+            _cfgStoveHeatingSpeed = _saunaConfig.Bind(
+                "Stove",
+                "HeatingSpeed",
+                StoveTuning.HeatingSpeed.Standard,
+                SyncedConfigDescription(
+                    "How fast the stove stones heat up and how much heat a pour spends. " +
+                    "Standard: 20 heat per minute (0 to 100 in 5 minutes), a pour costs 20. " +
+                    "Fast: 30 heat per minute (0 to 100 in 3 min 20 s), a pour costs 15."));
+
+            _cfgStoveMaxHeat = _saunaConfig.Bind(
+                "Stove",
+                "MaxHeat",
+                100f,
+                SyncedConfigDescription(
+                    "Highest stone heat. Pouring needs at least 50 heat, so a higher maximum gives more pours " +
+                    "from one full heat-up, but the stones also take longer to get there.",
+                    new AcceptableValueRange<float>(60f, 1000f)));
+
+            _cfgStoveCoolPerMinute = _saunaConfig.Bind(
+                "Stove",
+                "CoolPerMinute",
+                5f,
+                SyncedConfigDescription(
+                    "Stone heat lost per minute once the stones start cooling. 5 cools 100 heat down to 0 in 20 minutes.",
+                    new AcceptableValueRange<float>(0f, 100f)));
+
+            _cfgStoveCoolingDelaySeconds = _saunaConfig.Bind(
+                "Stove",
+                "CoolingDelaySeconds",
+                60f,
+                SyncedConfigDescription(
+                    "Seconds the stones keep their heat after the fire goes out before they start cooling.",
+                    new AcceptableValueRange<float>(0f, 3600f)));
+
+            _cfgStoveSteamDependsOnHeat = _saunaConfig.Bind(
+                "Stove",
+                "SteamDependsOnHeat",
+                true,
+                SyncedConfigDescription(
+                    "If enabled, cooler stones give less steam per pour: the full amount at max heat, " +
+                    "falling linearly towards half at 0 heat. If disabled, every pour gives the full amount."));
+
+            _cfgStoveGlow = _saunaConfig.Bind(
+                "Stove",
+                "Glow",
+                StoneRednessTuning.StoveGlow.Standard,
+                SyncedConfigDescription(
+                    "How brightly the hot stove stones redden, glow and light the sauna. " +
+                    "Dim halves redness, glow and light brightness."));
+
+            _cfgStoveShowHeatOnHover = _saunaConfig.Bind(
+                "Stove",
+                "ShowHeatOnHover",
+                false,
+                SyncedConfigDescription(
+                    "If enabled, the stove hover text shows the current stone heat."));
 
             _cfgStoveRecipe = _saunaConfig.Bind(
                 "Recipes",
@@ -111,7 +176,7 @@ namespace SaunaMod
                 "TooHotWeapons",
                 true,
                 SyncedConfigDescription(
-                    "Holding weapons while steaming in the sauna will trigger the Too Hot status effect"));
+                    "If enabled, holding a weapon, bow or shield while steaming also triggers the Too hot status effect, like wearing clothes."));
 
             _cfgWellSteamedTier1Minutes = _saunaConfig.Bind(
                 "WellSteamed",
@@ -256,6 +321,17 @@ namespace SaunaMod
             SteamTuning.CloudsPerPour = Mathf.Max(1, _cfgCloudsPerPour.Value);
             SteamTuning.CloudsPerPourWithBucket = Mathf.Max(1, _cfgCloudsPerPourWithBucket.Value);
             SteamTuning.MaxClouds = Mathf.Max(10, _cfgMaxClouds.Value);
+
+            StoveTuning.MaxWood = Mathf.Max(1, _cfgStoveMaxWood.Value);
+            StoveTuning.ApplyHeatingSpeed(_cfgStoveHeatingSpeed.Value);
+            StoveTuning.MaxHeat = Mathf.Max(1f, _cfgStoveMaxHeat.Value);
+            StoveTuning.CoolPerMinute = Mathf.Max(0f, _cfgStoveCoolPerMinute.Value);
+            StoveTuning.CoolingDelaySeconds = Mathf.Max(0f, _cfgStoveCoolingDelaySeconds.Value);
+            StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
+            StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);
+            StoveTuning.ShowHeatOnHover = _cfgStoveShowHeatOnHover.Value ? 1 : 0;
+            SaunaStove.ApplyFuelToAll();
+            SaunaStove.RefreshStoneHeatAll();
         }
 
         /// <summary>

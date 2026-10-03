@@ -12,9 +12,9 @@ namespace SaunaMod
 
         /// Multiplier applied to the character's own skin color at full strength.
         /// Lowering green and blue while keeping red is what makes the skin look flushed.
-        public static float TintR = 1.1f;
-        public static float TintG = 0.55f;
-        public static float TintB = 0.5f;
+        public const float TintR = 1.1f;
+        public const float TintG = 0.55f;
+        public const float TintB = 0.5f;
 
         /// Seconds for fully red skin to return to the normal color after leaving the steam.
         /// Default equals the full heating time: 3 time tiers of SteamTimeToBuff (20 s each).
@@ -27,14 +27,14 @@ namespace SaunaMod
         /// At zero redness the original color is returned unchanged.
         public static Vector3 Apply(Vector3 baseColor, float redness)
         {
-            float t = Mathf.Clamp01(redness) * Mathf.Clamp01(Strength);
-            if (t <= 0f)
+            float amount = Mathf.Clamp01(redness) * Mathf.Clamp01(Strength);
+            if (amount <= 0f)
             {
                 return baseColor;
             }
 
-            Vector3 hot = Vector3.Scale(baseColor, new Vector3(TintR, TintG, TintB));
-            return Vector3.Lerp(baseColor, hot, t);
+            Vector3 hotColor = Vector3.Scale(baseColor, new Vector3(TintR, TintG, TintB));
+            return Vector3.Lerp(baseColor, hotColor, amount);
         }
     }
 }

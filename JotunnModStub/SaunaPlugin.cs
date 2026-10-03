@@ -23,7 +23,7 @@ namespace SaunaMod
     {
         public const string PluginGUID = "nikita.valheim.sauna";
         public const string PluginName = "SaunaMod";
-        public const string PluginVersion = "2.1.0";
+        public const string PluginVersion = "2.2.0";
         private const string ConfigFileName = "nekitker.saunamod.cfg";
 
         private const string DefaultStoveRecipe = "Wood:10,Coal:5,Stone:40";
@@ -83,6 +83,15 @@ namespace SaunaMod
         private ConfigEntry<int> _cfgCloudsPerPour;
         private ConfigEntry<int> _cfgCloudsPerPourWithBucket;
         private ConfigEntry<int> _cfgMaxClouds;
+
+        private ConfigEntry<int> _cfgStoveMaxWood;
+        private ConfigEntry<StoveTuning.HeatingSpeed> _cfgStoveHeatingSpeed;
+        private ConfigEntry<float> _cfgStoveMaxHeat;
+        private ConfigEntry<float> _cfgStoveCoolPerMinute;
+        private ConfigEntry<float> _cfgStoveCoolingDelaySeconds;
+        private ConfigEntry<bool> _cfgStoveSteamDependsOnHeat;
+        private ConfigEntry<StoneRednessTuning.StoveGlow> _cfgStoveGlow;
+        private ConfigEntry<bool> _cfgStoveShowHeatOnHover;
 
         public static int WellSteamedHash;
 

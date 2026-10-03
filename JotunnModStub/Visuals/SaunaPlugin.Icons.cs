@@ -55,22 +55,10 @@ namespace SaunaMod
                 // Build exactly what is visible on the real stove: floor, dome, and stones.
                 StoveVisual.Build(temp.transform);
 
-                // The icon shows a lit stove, so hide the cooled coals.
-                Transform coal = temp.transform.Find(StoveVisual.CoalName);
-                if (coal != null)
-                {
-                    coal.gameObject.SetActive(false);
-                }
-
                 if (temp.GetComponentInChildren<MeshFilter>(true) == null)
                 {
                     Jotunn.Logger.LogWarning("piece icon: no mesh");
                     return;
-                }
-
-                if (StoveVisual.IconFlame > 0)
-                {
-                    AddFlameToIcon(temp);
                 }
 
                 Sprite rendered = RenderManager.Instance.Render(
@@ -557,49 +545,6 @@ namespace SaunaMod
                 {
                     UnityEngine.Object.Destroy(copy);
                 }
-            }
-        }
-
-        /// Copies the flame from the stove prefab for icon rendering and removes nonvisual parts:
-        /// lights, effect areas, and audio are unnecessary for rendering and may spam the log.
-        private static void AddFlameToIcon(GameObject temp)
-        {
-            Fireplace fireplace = _stovePrefab.GetComponent<Fireplace>();
-
-            if (fireplace == null)
-            {
-                return;
-            }
-
-            GameObject source = fireplace.m_enabledObjectHigh != null
-                ? fireplace.m_enabledObjectHigh
-                : fireplace.m_enabledObject;
-
-            if (source == null)
-            {
-                return;
-            }
-
-            GameObject flame = UnityEngine.Object.Instantiate(source, temp.transform);
-            flame.name = "icon_flame";
-            flame.transform.localPosition = source.transform.localPosition;
-            flame.transform.localRotation = source.transform.localRotation;
-            flame.transform.localScale = source.transform.localScale;
-            flame.SetActive(true);
-
-            foreach (Light light in flame.GetComponentsInChildren<Light>(true))
-            {
-                UnityEngine.Object.DestroyImmediate(light);
-            }
-
-            foreach (EffectArea area in flame.GetComponentsInChildren<EffectArea>(true))
-            {
-                UnityEngine.Object.DestroyImmediate(area);
-            }
-
-            foreach (AudioSource audio in flame.GetComponentsInChildren<AudioSource>(true))
-            {
-                UnityEngine.Object.DestroyImmediate(audio);
             }
         }
 
