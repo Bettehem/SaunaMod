@@ -103,13 +103,20 @@ namespace SaunaMod
                     "If enabled, cooler stones give less steam per pour: the full amount at max heat, " +
                     "falling linearly towards half at 0 heat. If disabled, every pour gives the full amount."));
 
-            // Purely visual, so every player picks it locally instead of following the server.
             _cfgStoveGlow = _saunaConfig.Bind(
                 "Stove",
                 "Glow",
                 StoneRednessTuning.StoveGlow.Standard,
-                "How brightly the hot stove stones redden, glow and light the sauna. " +
-                "Dim halves redness, glow and light brightness. This setting is local and not synchronized.");
+                SyncedConfigDescription(
+                    "How brightly the hot stove stones redden, glow and light the sauna. " +
+                    "Dim halves redness, glow and light brightness."));
+
+            _cfgStoveShowHeatOnHover = _saunaConfig.Bind(
+                "Stove",
+                "ShowHeatOnHover",
+                false,
+                SyncedConfigDescription(
+                    "If enabled, the stove hover text shows the current stone heat."));
 
             _cfgStoveRecipe = _saunaConfig.Bind(
                 "Recipes",
@@ -322,6 +329,7 @@ namespace SaunaMod
             StoveTuning.CoolingDelaySeconds = Mathf.Max(0f, _cfgStoveCoolingDelaySeconds.Value);
             StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
             StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);
+            StoveTuning.ShowHeatOnHover = _cfgStoveShowHeatOnHover.Value ? 1 : 0;
             SaunaStove.ApplyFuelToAll();
             SaunaStove.RefreshStoneHeatAll();
         }

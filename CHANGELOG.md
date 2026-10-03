@@ -8,7 +8,7 @@
 * Hot stones redden, glow and softly light the sauna
 * New stove interior: campfire logs that char when the fire goes out, on coals that glow while the stones are hot
 * Sauna comfort now depends on stone heat instead of the fire
-* New `Stove` config options: `MaxWood`, `HeatingSpeed`, `MaxHeat`, `CoolPerMinute`, `CoolingDelaySeconds`, `SteamDependsOnHeat` and `Glow`
+* New `Stove` config options: `MaxWood`, `HeatingSpeed`, `MaxHeat`, `CoolPerMinute`, `CoolingDelaySeconds`, `SteamDependsOnHeat`, `Glow` and `ShowHeatOnHover`
 
 ## 2.1.0
 

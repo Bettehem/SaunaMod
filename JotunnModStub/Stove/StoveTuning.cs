@@ -45,8 +45,8 @@ namespace SaunaMod
         /// Seconds between two pours on the same stove.
         public static float PourCooldown = 5f;
 
-        /// 1 = append the stone heat to the stove hover text.
-        public static int ShowHeatOnHover = 1;
+        /// 1 = append the stone heat to the stove hover text (cfg Stove.ShowHeatOnHover).
+        public static int ShowHeatOnHover = 0;
 
         /// When false (cfg Stove.SteamDependsOnHeat), every pour gives the full amount of steam.
         public static bool SteamDependsOnHeat = true;

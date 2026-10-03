@@ -91,6 +91,7 @@ namespace SaunaMod
         private ConfigEntry<float> _cfgStoveCoolingDelaySeconds;
         private ConfigEntry<bool> _cfgStoveSteamDependsOnHeat;
         private ConfigEntry<StoneRednessTuning.StoveGlow> _cfgStoveGlow;
+        private ConfigEntry<bool> _cfgStoveShowHeatOnHover;
 
         public static int WellSteamedHash;
 
