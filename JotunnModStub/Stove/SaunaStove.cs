@@ -56,8 +56,8 @@ namespace SaunaMod
         private float m_shownHeat = -1f;
         private float m_shownCoalGlow = -1f;
 
-        // The first update waits one second so that Fireplace has already caught up
-        // the fuel it burned while the area was unloaded.
+        // The catch-up after the area was unloaded happens in SaunaStoveFuelPatch, right before
+        // Fireplace burns off its fuel; this timer only keeps the heat current in between.
         private float m_heatUpdateTimer = 1f;
 
         // ---- steam burst ----
@@ -368,10 +368,64 @@ namespace SaunaMod
             return ZNet.instance != null ? ZNet.instance.GetTime().Ticks : DateTime.Now.Ticks;
         }
 
+        /// Network-clock moment the stove runs (or ran) out of wood: long.MaxValue while it
+        /// cannot run out, long.MinValue while it cannot burn at all.
+        ///
+        /// Fireplace stores its fuel as of its own last update (ZDOVars.s_lastTime) and burns
+        /// it off in one step when the owner next updates it. As long as that has not happened,
+        /// lastTime + fuel * secPerFuel is the exact moment the wood runs out, also when it ran
+        /// out while the area was unloaded.
+        private long FuelOutTicks(ZDO zdo, long nowTicks)
+        {
+            // The same conditions as Fireplace.IsBurning apart from the fuel.
+            // m_blocked stays false because the stove disables the cover check.
+            if (m_fireplace.m_blocked || zdo.GetInt(ZDOVars.s_state, 1) != 1)
+            {
+                return long.MinValue;
+            }
+
+            if (m_fireplace.m_checkWaterLevel)
+            {
+                Vector3 firePosition = m_fireplace.m_enabledObject != null
+                    ? m_fireplace.m_enabledObject.transform.position
+                    : transform.position;
+                if (Floating.IsUnderWater(firePosition, ref m_fireplace.m_previousWaterVolume))
+                {
+                    return long.MinValue;
+                }
+            }
+
+            if (m_fireplace.m_infiniteFuel)
+            {
+                return long.MaxValue;
+            }
+
+            float fuel = zdo.GetFloat(ZDOVars.s_fuel, 0f);
+            if (fuel <= 0f)
+            {
+                return long.MinValue;
+            }
+
+            if (m_fireplace.m_secPerFuel <= 0f)
+            {
+                return long.MaxValue;
+            }
+
+            // Without lastTime the Fireplace has not burned anything yet; it starts counting now.
+            long fuelTimeTicks = zdo.GetLong(ZDOVars.s_lastTime, nowTicks);
+            double burnTicks = fuel * (double)m_fireplace.m_secPerFuel * TimeSpan.TicksPerSecond;
+            return fuelTimeTicks + (long)Math.Min(burnTicks, long.MaxValue / 2);
+        }
+
         /// Owner only: advance the stone heat by the time passed since the last update.
         /// Elapsed time is measured on the network clock and stored in the ZDO, so the heat
         /// also catches up after the area was unloaded or ownership changed hands.
-        private void UpdateStoneHeat()
+        ///
+        /// The interval is split at the moment the wood ran out: the stones heat until then,
+        /// hold their heat for CoolingDelaySeconds and cool for the rest. SaunaStoveFuelPatch
+        /// runs this right before Fireplace burns off its fuel, so the fuel read here is never
+        /// already spent for the time being calculated.
+        internal void UpdateStoneHeat()
         {
             if (m_fireplace == null || !IsPlaced() || !m_nview.IsOwner())
             {
@@ -390,19 +444,27 @@ namespace SaunaMod
 
             float heat = zdo.GetFloat(ZdoHeat, 0f);
 
-            if (m_fireplace.IsBurning())
+            // End of burning within this interval: lastTicks = not burning, nowTicks = burned throughout.
+            long burnEndTicks = Math.Max(lastTicks, Math.Min(nowTicks, FuelOutTicks(zdo, nowTicks)));
+
+            if (burnEndTicks > lastTicks)
+            {
+                heat += StoveTuning.HeatPerMinute * TicksToMinutes(burnEndTicks - lastTicks);
+                heat = Mathf.Min(heat, StoveTuning.MaxHeat);
+            }
+
+            if (burnEndTicks >= nowTicks)
             {
                 zdo.Set(ZdoFireOutTime, 0L);
-                heat += StoveTuning.HeatPerMinute * TicksToMinutes(nowTicks - lastTicks);
             }
             else
             {
                 // Remember when the fire went out; the stones hold their heat for CoolingDelaySeconds
                 // after that and only cool for the part of this interval that comes later.
                 long fireOutTicks = zdo.GetLong(ZdoFireOutTime, 0L);
-                if (fireOutTicks <= 0L)
+                if (burnEndTicks > lastTicks || fireOutTicks <= 0L)
                 {
-                    fireOutTicks = lastTicks;
+                    fireOutTicks = burnEndTicks;
                     zdo.Set(ZdoFireOutTime, fireOutTicks);
                 }
 
