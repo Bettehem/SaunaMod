@@ -79,6 +79,14 @@ namespace SaunaMod
                     "from one full heat-up, but the stones also take longer to get there.",
                     new AcceptableValueRange<float>(60f, 1000f)));
 
+            _cfgStovePourCost = _saunaConfig.Bind(
+                "Stove",
+                "PourCost",
+                20f,
+                SyncedConfigDescription(
+                    "How much heat pouring water on the stove will remove from it",
+                    new AcceptableValueRange<float>(0f, 100f)));
+
             _cfgStoveCoolPerMinute = _saunaConfig.Bind(
                 "Stove",
                 "CoolPerMinute",
@@ -325,6 +333,7 @@ namespace SaunaMod
             StoveTuning.MaxWood = Mathf.Max(1, _cfgStoveMaxWood.Value);
             StoveTuning.ApplyHeatingSpeed(_cfgStoveHeatingSpeed.Value);
             StoveTuning.MaxHeat = Mathf.Max(1f, _cfgStoveMaxHeat.Value);
+            StoveTuning.PourHeatCost = Mathf.Max(1f, _cfgStovePourCost.Value);
             StoveTuning.CoolPerMinute = Mathf.Max(0f, _cfgStoveCoolPerMinute.Value);
             StoveTuning.CoolingDelaySeconds = Mathf.Max(0f, _cfgStoveCoolingDelaySeconds.Value);
             StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
