@@ -118,6 +118,54 @@ namespace SaunaMod
                 SyncedConfigDescription(
                     "If enabled, the stove hover text shows the current stone heat."));
 
+            _cfgTier4Bonuses = _saunaConfig.Bind(
+                "TowelRack",
+                "Tier4Bonuses",
+                true,
+                SyncedConfigDescription(
+                    "Experimental. If enabled, Well steamed earned in a tier 4 sauna (stove + whisks + bucket + towel rack) " +
+                    "helps on slopes and against Freezing, as set below."));
+
+            _cfgTier4SlideAngleBonus = _saunaConfig.Bind(
+                "TowelRack",
+                "SlideAngleBonus",
+                TowelRackTuning.SlideAngleBonus,
+                SyncedConfigDescription(
+                    "Degrees added to the steepest slope you can stand on without slipping (vanilla 38).",
+                    new AcceptableValueRange<float>(0f, 52f)));
+
+            _cfgTier4SlipSpeed = _saunaConfig.Bind(
+                "TowelRack",
+                "SlipSpeed",
+                TowelRackTuning.SlipSpeed,
+                SyncedConfigDescription(
+                    "How fast you start slipping on a slope that is still too steep. Vanilla is 1; lower slips more slowly.",
+                    new AcceptableValueRange<float>(0f, 2f)));
+
+            _cfgTier4ClimbStamina = _saunaConfig.Bind(
+                "TowelRack",
+                "ClimbStaminaMultiplier",
+                TowelRackTuning.ClimbStaminaMultiplier,
+                SyncedConfigDescription(
+                    "Stamina used for running uphill and jumping on slopes, as a share of normal. 0.7 = 30% less.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+
+            _cfgTier4ClimbMinSlope = _saunaConfig.Bind(
+                "TowelRack",
+                "ClimbMinSlope",
+                TowelRackTuning.ClimbMinSlope,
+                SyncedConfigDescription(
+                    "Ground angle in degrees from which the climbing stamina bonus applies.",
+                    new AcceptableValueRange<float>(0f, 90f)));
+
+            _cfgTier4FreezingDamage = _saunaConfig.Bind(
+                "TowelRack",
+                "FreezingDamageMultiplier",
+                TowelRackTuning.FreezingDamageMultiplier,
+                SyncedConfigDescription(
+                    "Damage taken from Freezing, as a share of normal. 0.5 = half damage.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+
             _cfgStoveRecipe = _saunaConfig.Bind(
                 "Recipes",
                 "SaunaStove",
@@ -337,6 +385,13 @@ namespace SaunaMod
             StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
             StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);
             StoveTuning.ShowHeatOnHover = _cfgStoveShowHeatOnHover.Value ? 1 : 0;
+
+            TowelRackTuning.Enabled = _cfgTier4Bonuses.Value ? 1 : 0;
+            TowelRackTuning.SlideAngleBonus = Mathf.Clamp(_cfgTier4SlideAngleBonus.Value, 0f, 52f);
+            TowelRackTuning.SlipSpeed = Mathf.Max(0f, _cfgTier4SlipSpeed.Value);
+            TowelRackTuning.ClimbStaminaMultiplier = Mathf.Clamp01(_cfgTier4ClimbStamina.Value);
+            TowelRackTuning.ClimbMinSlope = Mathf.Clamp(_cfgTier4ClimbMinSlope.Value, 0f, 90f);
+            TowelRackTuning.FreezingDamageMultiplier = Mathf.Clamp01(_cfgTier4FreezingDamage.Value);
             SaunaStove.ApplyFuelToAll();
             SaunaStove.RefreshStoneHeatAll();
         }

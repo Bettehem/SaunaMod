@@ -95,6 +95,13 @@ namespace SaunaMod
         private ConfigEntry<StoneRednessTuning.StoveGlow> _cfgStoveGlow;
         private ConfigEntry<bool> _cfgStoveShowHeatOnHover;
 
+        private ConfigEntry<bool> _cfgTier4Bonuses;
+        private ConfigEntry<float> _cfgTier4SlideAngleBonus;
+        private ConfigEntry<float> _cfgTier4SlipSpeed;
+        private ConfigEntry<float> _cfgTier4ClimbStamina;
+        private ConfigEntry<float> _cfgTier4ClimbMinSlope;
+        private ConfigEntry<float> _cfgTier4FreezingDamage;
+
         public static int WellSteamedHash;
 
         private static GameObject _prefabContainer;

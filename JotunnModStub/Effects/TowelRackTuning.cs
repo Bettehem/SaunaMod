@@ -5,7 +5,8 @@ using UnityEngine;
 namespace SaunaMod
 {
     /// Experimental Well steamed bonuses earned at sauna tier 4 (stove + whisks + bucket + towel rack).
-    /// Tuned live from the editor; they apply to the local player only.
+    /// Values come from the server-synchronized [TowelRack] config section, so every client
+    /// applies the same bonuses to its own player; the editor only changes them locally for testing.
     internal static class TowelRackTuning
     {
         /// 1 = bonuses on, 0 = off.
