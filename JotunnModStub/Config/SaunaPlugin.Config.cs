@@ -66,9 +66,10 @@ namespace SaunaMod
                 "HeatingSpeed",
                 StoveTuning.HeatingSpeed.Standard,
                 SyncedConfigDescription(
-                    "How fast the stove stones heat up and how much heat a pour spends. " +
-                    "Standard: 20 heat per minute (0 to 100 in 5 minutes), a pour costs 20. " +
-                    "Fast: 30 heat per minute (0 to 100 in 3 min 20 s), a pour costs 15."));
+                    "How fast the stove stones heat up. " +
+                    "Standard: 20 heat per minute (0 to 100 in 5 minutes). " +
+                    "Fast: 30 heat per minute (0 to 100 in 3 min 20 s). " +
+                    "The heat a pour spends is set separately by PourCost."));
 
             _cfgStoveMaxHeat = _saunaConfig.Bind(
                 "Stove",
@@ -84,8 +85,9 @@ namespace SaunaMod
                 "PourCost",
                 20f,
                 SyncedConfigDescription(
-                    "How much heat pouring water on the stove will remove from it",
-                    new AcceptableValueRange<float>(0f, 100f)));
+                    "Stone heat spent by one pour. Pouring needs at least 50 heat, so with 100 max heat " +
+                    "the default 20 gives 3 pours from one full heat-up and 15 gives 4.",
+                    new AcceptableValueRange<float>(1f, 100f)));
 
             _cfgStoveCoolPerMinute = _saunaConfig.Bind(
                 "Stove",
