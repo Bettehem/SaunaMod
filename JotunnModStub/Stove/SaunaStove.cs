@@ -194,12 +194,13 @@ namespace SaunaMod
         // Sauna accessories
         // =====================================================================
 
-        /// Whisks and bucket linked to THIS stove. Uses the same rule as the golden line:
+        /// Whisks, bucket and towel rack linked to THIS stove. Uses the same rule as the golden line:
         /// the accessory must be within MaxLinkDistance and this stove must be its nearest stove.
-        private void FindLinkedAccessories(out bool hasWhisks, out bool hasBucket)
+        private void FindLinkedAccessories(out bool hasWhisks, out bool hasBucket, out bool hasTowelRack)
         {
             hasWhisks = false;
             hasBucket = false;
+            hasTowelRack = false;
 
             foreach (Piece piece in Piece.s_allPieces)
             {
@@ -210,7 +211,8 @@ namespace SaunaMod
 
                 bool isWhisks = piece.m_name == "$piece_sauna_wrisks";
                 bool isBucket = piece.m_name == "$piece_sauna_bucket";
-                if (!isWhisks && !isBucket)
+                bool isTowelRack = piece.m_name == "$piece_sauna_towel_rack";
+                if (!isWhisks && !isBucket && !isTowelRack)
                 {
                     continue;
                 }
@@ -229,25 +231,27 @@ namespace SaunaMod
 
                 hasWhisks |= isWhisks;
                 hasBucket |= isBucket;
+                hasTowelRack |= isTowelRack;
 
-                if (hasWhisks && hasBucket)
+                if (hasWhisks && hasBucket && hasTowelRack)
                 {
                     return;
                 }
             }
         }
 
-        /// Sauna tier around THIS stove. The bucket alone does not raise the tier;
-        /// progression is stove -> whisks -> bucket.
+        /// Sauna tier around THIS stove. An accessory raises the tier only on top of the
+        /// previous ones; progression is stove -> whisks -> bucket -> towel rack.
         public int GetWellSteamedSaunaTier()
         {
             bool hasWhisks;
             bool hasBucket;
-            FindLinkedAccessories(out hasWhisks, out hasBucket);
+            bool hasTowelRack;
+            FindLinkedAccessories(out hasWhisks, out hasBucket, out hasTowelRack);
 
             if (hasWhisks && hasBucket)
             {
-                return 3;
+                return hasTowelRack ? 4 : 3;
             }
 
             return hasWhisks ? 2 : 1;
@@ -263,7 +267,7 @@ namespace SaunaMod
         }
 
         /// Comfort bonus from sauna accessories around the nearest stove with hot stones
-        /// (at least StoveTuning.ComfortMinHeat). Whisks and bucket each contribute +1.
+        /// (at least StoveTuning.ComfortMinHeat). Whisks, bucket and towel rack each contribute +1.
         public static int GetSaunaComfortBonusNear(Vector3 position)
         {
             SaunaStove hotStove = FindNearest(position, SaunaRange,
@@ -276,9 +280,10 @@ namespace SaunaMod
 
             bool hasWhisks;
             bool hasBucket;
-            hotStove.FindLinkedAccessories(out hasWhisks, out hasBucket);
+            bool hasTowelRack;
+            hotStove.FindLinkedAccessories(out hasWhisks, out hasBucket, out hasTowelRack);
 
-            return (hasWhisks ? 1 : 0) + (hasBucket ? 1 : 0);
+            return (hasWhisks ? 1 : 0) + (hasBucket ? 1 : 0) + (hasTowelRack ? 1 : 0);
         }
 
         // =====================================================================

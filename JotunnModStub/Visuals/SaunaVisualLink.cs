@@ -109,7 +109,8 @@ namespace SaunaMod
             {
                 // m_name is the most reliable identifier for the placement ghost of our Pieces.
                 if (piece.m_name == "$piece_sauna_wrisks" ||
-                    piece.m_name == "$piece_sauna_bucket")
+                    piece.m_name == "$piece_sauna_bucket" ||
+                    piece.m_name == "$piece_sauna_towel_rack")
                 {
                     return true;
                 }
@@ -117,7 +118,8 @@ namespace SaunaMod
 
             // Small fallback to prefab name in case a localization token changes in the future.
             string prefabName = Utils.GetPrefabName(ghost);
-            return prefabName == "sauna_wrisks" || prefabName == "sauna_bucket";
+            return prefabName == "sauna_wrisks" || prefabName == "sauna_bucket" ||
+                prefabName == "sauna_towel_rack";
         }
 
         private static GameObject ConnectionPrefab()

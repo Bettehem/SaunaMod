@@ -22,7 +22,7 @@ namespace SaunaMod
     {
         public static bool Active;
 
-        private static int _sectionIndex = 4; // Open directly on the Steam section for tester convenience.
+        private static int _sectionIndex = 5; // Open directly on the Steam section for tester convenience.
         private static int _entryIndex;
         private static GameObject _gui;
 
@@ -50,6 +50,7 @@ namespace SaunaMod
         private static readonly Action RefreshStoneHeat = () => SaunaStove.RefreshStoneHeatAll();
         private static readonly Action RefreshWrisksIcon = () => SaunaPlugin.RefreshWrisksIcon();
         private static readonly Action RefreshBucketIcon = () => SaunaPlugin.RefreshBucketIcon();
+        private static readonly Action RefreshTowelRackIcon = () => SaunaPlugin.RefreshTowelRackIcon();
         private static readonly Action RefreshBucketLiquidsAndIcon = () =>
         {
             SaunaPlugin.RefreshBucketLiquidVisuals();
@@ -149,6 +150,28 @@ namespace SaunaMod
                     new Entry { Name = "bucket.fire.G", Hint = "Fire wine: green", Get = () => SaunaBucketLiquidTuning.FireG, Set = v => SaunaBucketLiquidTuning.FireG = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
                     new Entry { Name = "bucket.fire.B", Hint = "Fire wine: blue", Get = () => SaunaBucketLiquidTuning.FireB, Set = v => SaunaBucketLiquidTuning.FireB = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon },
                     new Entry { Name = "bucket.fire.A", Hint = "Fire wine: opacity", Get = () => SaunaBucketLiquidTuning.FireA, Set = v => SaunaBucketLiquidTuning.FireA = Mathf.Clamp01(v), Step = 0.02f, Changed = RefreshBucketLiquidsAndIcon }
+                }
+            },
+            new Section
+            {
+                Name = "Towel Rack",
+                Entries = new[]
+                {
+                    new Entry { Name = "towelrack.icon.Yaw", Hint = "Towel rack icon: turn around vertical axis",      Get = () => SaunaPieceIconTuning.TowelRackYaw,      Set = v => SaunaPieceIconTuning.TowelRackYaw = v,      Step = 5f, AllowNegative = true, Changed = RefreshTowelRackIcon },
+                    new Entry { Name = "towelrack.icon.Pitch", Hint = "Towel rack icon: tilt forward/back",    Get = () => SaunaPieceIconTuning.TowelRackPitch,    Set = v => SaunaPieceIconTuning.TowelRackPitch = v,    Step = 5f, AllowNegative = true, Changed = RefreshTowelRackIcon },
+                    new Entry { Name = "towelrack.icon.Roll", Hint = "Towel rack icon: roll",     Get = () => SaunaPieceIconTuning.TowelRackRoll,     Set = v => SaunaPieceIconTuning.TowelRackRoll = v,     Step = 5f, AllowNegative = true, Changed = RefreshTowelRackIcon },
+                    new Entry { Name = "towelrack.icon.OffsetX", Hint = "Towel rack icon: horizontal shift",  Get = () => SaunaPieceIconTuning.TowelRackOffsetX,  Set = v => SaunaPieceIconTuning.TowelRackOffsetX = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshTowelRackIcon },
+                    new Entry { Name = "towelrack.icon.OffsetY", Hint = "Towel rack icon: vertical shift",  Get = () => SaunaPieceIconTuning.TowelRackOffsetY,  Set = v => SaunaPieceIconTuning.TowelRackOffsetY = v,  Step = 0.05f, AllowNegative = true, Changed = RefreshTowelRackIcon },
+                    new Entry { Name = "towelrack.icon.Distance", Hint = "Towel rack icon: camera distance", Get = () => SaunaPieceIconTuning.TowelRackDistance, Set = v => SaunaPieceIconTuning.TowelRackDistance = v, Step = 0.10f, AllowNegative = true, Changed = RefreshTowelRackIcon },
+                    new Entry { Name = "towelrack.icon.Scale", Hint = "Towel rack icon: scale",    Get = () => SaunaPieceIconTuning.TowelRackScale,    Set = v => SaunaPieceIconTuning.TowelRackScale = Mathf.Max(0.05f, v), Step = 0.05f, Changed = RefreshTowelRackIcon },
+
+                    // Experimental Well steamed bonuses from a tier 4 sauna (with the towel rack).
+                    new Entry { Name = "tier4.Enabled", Hint = "1 = tier 4 Well steamed bonuses on, 0 = off", Get = () => TowelRackTuning.Enabled, Set = v => TowelRackTuning.Enabled = Mathf.Clamp((int)v, 0, 1), Step = 1f, Integer = true },
+                    new Entry { Name = "tier4.SlideAngleBonus", Hint = "Degrees added to the steepest walkable slope (vanilla 38)", Get = () => TowelRackTuning.SlideAngleBonus, Set = v => TowelRackTuning.SlideAngleBonus = Mathf.Clamp(v, 0f, 52f), Step = 1f },
+                    new Entry { Name = "tier4.SlipSpeed", Hint = "How fast you start slipping on too steep slopes (vanilla 1)", Get = () => TowelRackTuning.SlipSpeed, Set = v => TowelRackTuning.SlipSpeed = Mathf.Max(0f, v), Step = 0.05f },
+                    new Entry { Name = "tier4.ClimbStamina", Hint = "Stamina for running uphill and jumping on slopes, share of normal", Get = () => TowelRackTuning.ClimbStaminaMultiplier, Set = v => TowelRackTuning.ClimbStaminaMultiplier = Mathf.Clamp01(v), Step = 0.05f },
+                    new Entry { Name = "tier4.ClimbMinSlope", Hint = "Slope from which the stamina bonus applies, degrees", Get = () => TowelRackTuning.ClimbMinSlope, Set = v => TowelRackTuning.ClimbMinSlope = Mathf.Clamp(v, 0f, 90f), Step = 1f },
+                    new Entry { Name = "tier4.FreezingDamage", Hint = "Damage from Freezing, share of normal", Get = () => TowelRackTuning.FreezingDamageMultiplier, Set = v => TowelRackTuning.FreezingDamageMultiplier = Mathf.Clamp01(v), Step = 0.05f }
                 }
             },
             new Section
@@ -397,6 +420,10 @@ namespace SaunaMod
                 case 2:
                     SaunaPlugin.RefreshBucketIcon();
                     SaunaPlugin.DumpBucketIcon();
+                    break;
+                case 3:
+                    SaunaPlugin.RefreshTowelRackIcon();
+                    SaunaPlugin.DumpTowelRackIcon();
                     break;
                 default:
                     Jotunn.Logger.LogInfo("sauna editor: current section has no hammer icon to save as PNG");

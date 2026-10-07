@@ -23,12 +23,14 @@ namespace SaunaMod
     {
         public const string PluginGUID = "nikita.valheim.sauna";
         public const string PluginName = "SaunaMod";
-        public const string PluginVersion = "2.2.0";
+        public const string PluginVersion = "2.5.0";
         private const string ConfigFileName = "nekitker.saunamod.cfg";
+        private const string SaunaPieceCategory = "Sauna";
 
         private const string DefaultStoveRecipe = "Wood:10,Coal:5,Stone:40";
         private const string DefaultWhisksRecipe = "FineWood:5,BronzeNails:1";
         private const string DefaultBucketRecipe = "Iron:5,FineWood:10";
+        private const string DefaultTowelRackRecipe = "FineWood:5,WolfPelt:5,IronNails:2";
 
         private const int SteamLayer = 30;
         private const int SmokeLayer = 31;
@@ -60,6 +62,7 @@ namespace SaunaMod
         private ConfigEntry<string> _cfgStoveRecipe;
         private ConfigEntry<string> _cfgWhisksRecipe;
         private ConfigEntry<string> _cfgBucketRecipe;
+        private ConfigEntry<string> _cfgTowelRackRecipe;
 
         private ConfigEntry<float> _cfgSteamTimeToBuff;
         private ConfigEntry<float> _cfgSteamHealPerSecond;
@@ -94,6 +97,13 @@ namespace SaunaMod
         private ConfigEntry<StoneRednessTuning.StoveGlow> _cfgStoveGlow;
         private ConfigEntry<bool> _cfgStoveShowHeatOnHover;
 
+        private ConfigEntry<bool> _cfgTier4Bonuses;
+        private ConfigEntry<float> _cfgTier4SlideAngleBonus;
+        private ConfigEntry<float> _cfgTier4SlipSpeed;
+        private ConfigEntry<float> _cfgTier4ClimbStamina;
+        private ConfigEntry<float> _cfgTier4ClimbMinSlope;
+        private ConfigEntry<float> _cfgTier4FreezingDamage;
+
         public static int WellSteamedHash;
 
         private static GameObject _prefabContainer;
@@ -102,6 +112,7 @@ namespace SaunaMod
         private static GameObject _wrisksPrefab;
         private static Sprite _wrisksFallbackIcon;
         private static GameObject _bucketPrefab;
+        private static GameObject _towelRackPrefab;
         private static int _iconRenderCount;
         private static SaunaPlugin _instance;
 

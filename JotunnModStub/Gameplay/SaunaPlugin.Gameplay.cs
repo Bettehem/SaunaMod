@@ -51,7 +51,6 @@ namespace SaunaMod
 
                 ApplySteamCollisions();
                 EnsureIcons();
-                ReadWetPenalty();
                 FindSteamVfx();
 
                 StoveVisual.Invalidate();
@@ -67,6 +66,7 @@ namespace SaunaMod
                 RefreshPieceIcon();
                 RefreshWrisksIcon();
                 RefreshBucketIcon();
+                RefreshTowelRackIcon();
             }
 
             SaunaEditor.Update();
@@ -224,7 +224,7 @@ namespace SaunaMod
             SE_WellSteamed existingSteamed = existing as SE_WellSteamed;
             int reached = existingSteamed != null ? existingSteamed.TimeTier : 0;
             int previousSaunaTier = existingSteamed != null
-                ? Mathf.Clamp(existingSteamed.SaunaTier, 1, 3)
+                ? Mathf.Clamp(existingSteamed.SaunaTier, 1, 4)
                 : 1;
             int currentSaunaTier = SaunaStove.GetWellSteamedSaunaTierNear(player.transform.position);
 
@@ -271,11 +271,14 @@ namespace SaunaMod
 
                 // Sauna tier is displayed by a separate vanilla star on the HUD icon.
                 // Keep the base tooltip free of whisk-specific claims. The extra line
-                // appears only after the effect was earned from a sauna with whisks.
+                // appears only after the effect was earned from a sauna with whisks,
+                // the climbing and freezing lines only from a sauna with the towel rack.
                 live.m_name = "$se_sauna_wellsteamed";
-                live.m_tooltip = saunaTier >= 2
-                    ? "$se_sauna_wellsteamed_tooltip_whisks"
-                    : "$se_sauna_wellsteamed_tooltip";
+                live.m_tooltip = saunaTier >= 4
+                    ? "$se_sauna_wellsteamed_tooltip_towels"
+                    : saunaTier >= 2
+                        ? "$se_sauna_wellsteamed_tooltip_whisks"
+                        : "$se_sauna_wellsteamed_tooltip";
             }
 
             if (_timeTier > reached && _timeTier > 1)

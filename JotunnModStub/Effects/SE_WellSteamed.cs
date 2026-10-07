@@ -17,7 +17,7 @@ using UnityEngine.Networking;
 namespace SaunaMod
 {
     /// Well Steamed cancels the Wet penalties to health, stamina, and eitr regeneration.
-    /// It only removes the penalty by dividing by the same multiplier applied by Wet; it does not grant a bonus above normal.
+    /// Wet's regeneration penalties are skipped by WellSteamedWetRegenPatch; no extra regeneration is granted.
     internal class SE_WellSteamed : SE_Stats
     {
         /// Reached TIME duration tier, 1..3.
@@ -26,49 +26,58 @@ namespace SaunaMod
         /// the remaining time is almost never exactly on a tier boundary.
         public int TimeTier;
 
-        /// Tier of the sauna itself, 1..3. Do not confuse it with TimeTier:
-        /// 1 = stove only, 2 = stove + whisks, 3 = stove + whisks + bucket.
-        /// At the moment the tiers differ only in displayed state; the core effect mechanics are the same.
+        /// Tier of the sauna itself, 1..4. Do not confuse it with TimeTier:
+        /// 1 = stove only, 2 = stove + whisks, 3 = stove + whisks + bucket, 4 = all of them + towel rack.
+        /// Tier 2 makes wetness harmless; tier 4 adds the climbing and freezing bonuses (TowelRackTuning).
         public int SaunaTier = 1;
 
-        public static float WetStaminaMultiplier = 1f;
-        public static float WetHealthMultiplier = 1f;
-        public static float WetEitrMultiplier = 1f;
+        // Captured before ForceJump clears ground contact; valid only during that call.
+        internal float JumpGroundSlope = -1f;
 
-        public override void ModifyStaminaRegen(ref float staminaRegen)
+        /// Tier 4: running uphill on a slope costs less stamina.
+        public override void ModifyRunStaminaDrain(float baseDrain, ref float drain, Vector3 dir)
         {
-            base.ModifyStaminaRegen(ref staminaRegen);
+            base.ModifyRunStaminaDrain(baseDrain, ref drain, dir);
 
-            if (SaunaTier >= 2 && IsWet() && WetStaminaMultiplier > 0f && WetStaminaMultiplier < 1f)
+            if (HasClimbingBonus() && TowelRackTuning.GroundSlope(m_character) >= TowelRackTuning.ClimbMinSlope)
             {
-                staminaRegen /= WetStaminaMultiplier;
+                // The ground normal leans downhill, so moving against it is moving uphill.
+                Vector3 downhill = m_character.m_lastGroundNormal;
+                downhill.y = 0f;
+                if (Vector3.Dot(dir, downhill) < 0f)
+                {
+                    drain -= baseDrain * (1f - Mathf.Clamp01(TowelRackTuning.ClimbStaminaMultiplier));
+                }
             }
         }
 
-        public override void ModifyHealthRegen(ref float healthRegen)
+        /// Tier 4: jumping on a slope costs less stamina.
+        public override void ModifyJumpStaminaUsage(float baseStaminaUse, ref float staminaUse)
         {
-            base.ModifyHealthRegen(ref healthRegen);
+            base.ModifyJumpStaminaUsage(baseStaminaUse, ref staminaUse);
 
-            if (SaunaTier >= 2 && IsWet() && WetHealthMultiplier > 0f && WetHealthMultiplier < 1f)
+            if (HasClimbingBonus() && JumpGroundSlope >= TowelRackTuning.ClimbMinSlope)
             {
-                healthRegen /= WetHealthMultiplier;
+                staminaUse -= baseStaminaUse * (1f - Mathf.Clamp01(TowelRackTuning.ClimbStaminaMultiplier));
             }
         }
 
-        public override void ModifyEitrRegen(ref float eitrRegen)
+        public override string GetTooltipString()
         {
-            base.ModifyEitrRegen(ref eitrRegen);
-
-            if (SaunaTier >= 2 && IsWet() && WetEitrMultiplier > 0f && WetEitrMultiplier < 1f)
-            {
-                eitrRegen /= WetEitrMultiplier;
-            }
+            // Config changes can disable the bonuses while this effect is already active.
+            m_tooltip = SaunaTier >= TowelRackTuning.SaunaTier && TowelRackTuning.Enabled != 0
+                ? "$se_sauna_wellsteamed_tooltip_towels"
+                : SaunaTier >= 2
+                    ? "$se_sauna_wellsteamed_tooltip_whisks"
+                    : "$se_sauna_wellsteamed_tooltip";
+            return base.GetTooltipString();
         }
 
-        private bool IsWet()
+        private bool HasClimbingBonus()
         {
-            return m_character != null
-                && m_character.GetSEMan().HaveStatusEffect(SEMan.s_statusEffectWet);
+            return TowelRackTuning.Enabled != 0 && SaunaTier >= TowelRackTuning.SaunaTier &&
+                m_character != null && m_character == Player.m_localPlayer;
         }
+
     }
 }

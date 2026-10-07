@@ -31,7 +31,7 @@ namespace SaunaMod
                     Name = "$piece_sauna_bucket",
                     Description = "$piece_sauna_bucket_desc",
                     PieceTable = PieceTables.Hammer,
-                    Category = PieceCategories.Furniture,
+                    Category = SaunaPieceCategory,
                     CraftingStation = CraftingStations.Workbench,
                     Requirements = ParseRecipeConfig(
                         BucketRecipeValue,
@@ -934,6 +934,8 @@ namespace SaunaMod
                 }
 
                 string wanted = NormalizeAssetPath(requestedPath);
+                // Fallback match on the file name alone, in case the folder differs at runtime.
+                string wantedFileSuffix = "/" + wanted.Substring(wanted.LastIndexOf('/') + 1);
                 object foundAssetId = null;
                 string foundPath = null;
 
@@ -961,7 +963,7 @@ namespace SaunaMod
                     string normalized = NormalizeAssetPath(path);
                     bool exact = string.Equals(normalized, wanted, StringComparison.OrdinalIgnoreCase);
                     bool suffix = normalized.EndsWith(
-                        "/fi_vil_container_bucket01.prefab",
+                        wantedFileSuffix,
                         StringComparison.OrdinalIgnoreCase);
 
                     if (exact || suffix)

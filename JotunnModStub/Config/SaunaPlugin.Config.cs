@@ -51,7 +51,7 @@ namespace SaunaMod
                 "EnableSaunaComfort",
                 true,
                 SyncedConfigDescription(
-                    "Enables conditional sauna comfort. Whisks and bucket each add +1 comfort only near a sauna stove with hot stones while sheltered."));
+                    "Enables conditional sauna comfort. Whisks, bucket and towel rack each add +1 comfort only near a sauna stove with hot stones while sheltered."));
 
             _cfgStoveMaxWood = _saunaConfig.Bind(
                 "Stove",
@@ -128,6 +128,54 @@ namespace SaunaMod
                 SyncedConfigDescription(
                     "If enabled, the stove hover text shows the current stone heat."));
 
+            _cfgTier4Bonuses = _saunaConfig.Bind(
+                "TowelRack",
+                "Tier4Bonuses",
+                true,
+                SyncedConfigDescription(
+                    "Experimental. If enabled, Well steamed earned in a tier 4 sauna (stove + whisks + bucket + towel rack) " +
+                    "helps on slopes and against Freezing, as set below."));
+
+            _cfgTier4SlideAngleBonus = _saunaConfig.Bind(
+                "TowelRack",
+                "SlideAngleBonus",
+                TowelRackTuning.SlideAngleBonus,
+                SyncedConfigDescription(
+                    "Degrees added to the steepest slope you can stand on without slipping (vanilla 38).",
+                    new AcceptableValueRange<float>(0f, 52f)));
+
+            _cfgTier4SlipSpeed = _saunaConfig.Bind(
+                "TowelRack",
+                "SlipSpeed",
+                TowelRackTuning.SlipSpeed,
+                SyncedConfigDescription(
+                    "How fast you start slipping on a slope that is still too steep. Vanilla is 1; lower slips more slowly.",
+                    new AcceptableValueRange<float>(0f, 2f)));
+
+            _cfgTier4ClimbStamina = _saunaConfig.Bind(
+                "TowelRack",
+                "ClimbStaminaMultiplier",
+                TowelRackTuning.ClimbStaminaMultiplier,
+                SyncedConfigDescription(
+                    "Stamina used for running uphill and jumping on slopes, as a share of normal. 0.7 = 30% less.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+
+            _cfgTier4ClimbMinSlope = _saunaConfig.Bind(
+                "TowelRack",
+                "ClimbMinSlope",
+                TowelRackTuning.ClimbMinSlope,
+                SyncedConfigDescription(
+                    "Ground angle in degrees from which the climbing stamina bonus applies.",
+                    new AcceptableValueRange<float>(0f, 90f)));
+
+            _cfgTier4FreezingDamage = _saunaConfig.Bind(
+                "TowelRack",
+                "FreezingDamageMultiplier",
+                TowelRackTuning.FreezingDamageMultiplier,
+                SyncedConfigDescription(
+                    "Damage taken from Freezing, as a share of normal. 0.5 = half damage.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+
             _cfgStoveRecipe = _saunaConfig.Bind(
                 "Recipes",
                 "SaunaStove",
@@ -148,6 +196,13 @@ namespace SaunaMod
                 DefaultBucketRecipe,
                 SyncedConfigDescription(
                     "Crafting recipe for the sauna bucket. Format: ItemPrefab:Amount,ItemPrefab:Amount. Example: Iron:5,FineWood:10."));
+
+            _cfgTowelRackRecipe = _saunaConfig.Bind(
+                "Recipes",
+                "SaunaTowelRack",
+                DefaultTowelRackRecipe,
+                SyncedConfigDescription(
+                    "Crafting recipe for the sauna towels. Format: ItemPrefab:Amount,ItemPrefab:Amount. Example: FineWood:5,WolfPelt:5,IronNails:2."));
 
             _cfgSteamTimeToBuff = _saunaConfig.Bind(
                 "Gameplay",
@@ -341,6 +396,13 @@ namespace SaunaMod
             StoveTuning.SteamDependsOnHeat = _cfgStoveSteamDependsOnHeat.Value;
             StoneRednessTuning.ApplyGlow(_cfgStoveGlow.Value);
             StoveTuning.ShowHeatOnHover = _cfgStoveShowHeatOnHover.Value ? 1 : 0;
+
+            TowelRackTuning.Enabled = _cfgTier4Bonuses.Value ? 1 : 0;
+            TowelRackTuning.SlideAngleBonus = Mathf.Clamp(_cfgTier4SlideAngleBonus.Value, 0f, 52f);
+            TowelRackTuning.SlipSpeed = Mathf.Max(0f, _cfgTier4SlipSpeed.Value);
+            TowelRackTuning.ClimbStaminaMultiplier = Mathf.Clamp01(_cfgTier4ClimbStamina.Value);
+            TowelRackTuning.ClimbMinSlope = Mathf.Clamp(_cfgTier4ClimbMinSlope.Value, 0f, 90f);
+            TowelRackTuning.FreezingDamageMultiplier = Mathf.Clamp01(_cfgTier4FreezingDamage.Value);
             SaunaStove.ApplyFuelToAll();
             SaunaStove.RefreshStoneHeatAll();
         }
@@ -465,6 +527,10 @@ namespace SaunaMod
             ? _cfgBucketRecipe.Value
             : DefaultBucketRecipe;
 
+        private string TowelRackRecipeValue => _cfgTowelRackRecipe != null
+            ? _cfgTowelRackRecipe.Value
+            : DefaultTowelRackRecipe;
+
         /// <summary>
         /// Applies synchronized recipe changes to already registered prefabs as well.
         /// This matters on multiplayer clients because server config can arrive after local prefab creation.
@@ -478,6 +544,7 @@ namespace SaunaMod
 
             ApplyRecipeToPiece(_stovePrefab, StoveRecipeValue, DefaultStoveRecipe, "sauna_stove");
             ApplyRecipeToPiece(_bucketPrefab, BucketRecipeValue, DefaultBucketRecipe, "sauna_bucket");
+            ApplyRecipeToPiece(_towelRackPrefab, TowelRackRecipeValue, DefaultTowelRackRecipe, "sauna_towel_rack");
 
             GameObject runtimeWhisks = ResolveSaunaWrisksRuntimePrefab();
             if (runtimeWhisks != null)

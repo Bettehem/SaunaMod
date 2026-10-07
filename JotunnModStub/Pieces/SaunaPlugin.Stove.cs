@@ -42,7 +42,7 @@ namespace SaunaMod
                     Name = "$piece_sauna_stove",
                     Description = "$piece_sauna_stove_desc",
                     PieceTable = PieceTables.Hammer,
-                    Category = PieceCategories.Furniture,
+                    Category = SaunaPieceCategory,
                     CraftingStation = CraftingStations.Workbench,
                     Requirements = ParseRecipeConfig(
                         StoveRecipeValue,
