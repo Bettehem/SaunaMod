@@ -106,24 +106,6 @@ namespace SaunaMod
             se.m_flashIcon = true;
         }
 
-        private void ReadWetPenalty()
-        {
-            SE_Stats wet = FindEffect("Wet") as SE_Stats;
-
-            if (wet == null)
-            {
-                Jotunn.Logger.LogWarning("Wet effect not found");
-                return;
-            }
-
-            SE_WellSteamed.WetStaminaMultiplier = wet.m_staminaRegenMultiplier;
-            SE_WellSteamed.WetHealthMultiplier = wet.m_healthRegenMultiplier;
-            SE_WellSteamed.WetEitrMultiplier = wet.m_eitrRegenMultiplier;
-
-            Jotunn.Logger.LogInfo($"Wet compensated: stamina={wet.m_staminaRegenMultiplier}, " +
-                $"health={wet.m_healthRegenMultiplier}, eitr={wet.m_eitrRegenMultiplier}");
-        }
-
         private void FindSteamVfx()
         {
             StatusEffect smoked = FindEffect("Smoked");

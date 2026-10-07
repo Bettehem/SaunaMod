@@ -51,7 +51,6 @@ namespace SaunaMod
 
                 ApplySteamCollisions();
                 EnsureIcons();
-                ReadWetPenalty();
                 FindSteamVfx();
 
                 StoveVisual.Invalidate();

@@ -17,7 +17,7 @@ using UnityEngine.Networking;
 namespace SaunaMod
 {
     /// Well Steamed cancels the Wet penalties to health, stamina, and eitr regeneration.
-    /// It only removes the penalty by dividing by the same multiplier applied by Wet; it does not grant a bonus above normal.
+    /// Wet's regeneration penalties are skipped by WellSteamedWetRegenPatch; no extra regeneration is granted.
     internal class SE_WellSteamed : SE_Stats
     {
         /// Reached TIME duration tier, 1..3.
@@ -33,40 +33,6 @@ namespace SaunaMod
 
         // Captured before ForceJump clears ground contact; valid only during that call.
         internal float JumpGroundSlope = -1f;
-
-        public static float WetStaminaMultiplier = 1f;
-        public static float WetHealthMultiplier = 1f;
-        public static float WetEitrMultiplier = 1f;
-
-        public override void ModifyStaminaRegen(ref float staminaRegen)
-        {
-            base.ModifyStaminaRegen(ref staminaRegen);
-
-            if (SaunaTier >= 2 && IsWet() && WetStaminaMultiplier > 0f && WetStaminaMultiplier < 1f)
-            {
-                staminaRegen /= WetStaminaMultiplier;
-            }
-        }
-
-        public override void ModifyHealthRegen(ref float healthRegen)
-        {
-            base.ModifyHealthRegen(ref healthRegen);
-
-            if (SaunaTier >= 2 && IsWet() && WetHealthMultiplier > 0f && WetHealthMultiplier < 1f)
-            {
-                healthRegen /= WetHealthMultiplier;
-            }
-        }
-
-        public override void ModifyEitrRegen(ref float eitrRegen)
-        {
-            base.ModifyEitrRegen(ref eitrRegen);
-
-            if (SaunaTier >= 2 && IsWet() && WetEitrMultiplier > 0f && WetEitrMultiplier < 1f)
-            {
-                eitrRegen /= WetEitrMultiplier;
-            }
-        }
 
         /// Tier 4: running uphill on a slope costs less stamina.
         public override void ModifyRunStaminaDrain(float baseDrain, ref float drain, Vector3 dir)
@@ -113,10 +79,5 @@ namespace SaunaMod
                 m_character != null && m_character == Player.m_localPlayer;
         }
 
-        private bool IsWet()
-        {
-            return m_character != null
-                && m_character.GetSEMan().HaveStatusEffect(SEMan.s_statusEffectWet);
-        }
     }
 }
