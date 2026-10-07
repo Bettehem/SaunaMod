@@ -7,7 +7,7 @@
 * Sauna towels add +1 conditional comfort and have a configurable recipe and `TowelRack` bonus settings
 * All sauna pieces now appear in the localized **Sauna** hammer category
 * Updated names, descriptions and effect tooltips across all five supported languages
-* Fixed Wet recovery penalty compensation with Rested and improved climbing stamina and towel rack durability
+* Fixed Wet recovery penalty compensation
 
 ## 2.2.0
 
@@ -89,3 +89,4 @@ First release.
 * Steam gathers under a roof and does not choke you
 * Full multiplayer synchronisation
 * English, Russian, German and Spanish
+
