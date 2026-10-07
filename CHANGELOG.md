@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.5.0
+
+* Added **Sauna towels**, a new buildable upgrade made from 5 Fine Wood, 5 Wolf Pelts and 2 Iron Nails
+* A fully upgraded sauna now improves Well steamed: climbing steep slopes costs less stamina, slipping is reduced and Freezing deals less damage
+* Sauna towels add +1 conditional comfort and have a configurable recipe and `TowelRack` bonus settings
+* All sauna pieces now appear in the localized **Sauna** hammer category
+* Updated names, descriptions and effect tooltips across all five supported languages
+
 ## 2.2.0
 
 * Added **stone heat**: the stones heat up while the stove burns, stay hot for a minute after the fire goes out and then slowly cool down
