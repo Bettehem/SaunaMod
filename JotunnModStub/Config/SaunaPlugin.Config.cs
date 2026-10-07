@@ -192,7 +192,7 @@ namespace SaunaMod
                 "SaunaTowelRack",
                 DefaultTowelRackRecipe,
                 SyncedConfigDescription(
-                    "Crafting recipe for the sauna towel rack. Format: ItemPrefab:Amount,ItemPrefab:Amount. Example: FineWood:5,WolfPelt:5."));
+                    "Crafting recipe for the sauna towels. Format: ItemPrefab:Amount,ItemPrefab:Amount. Example: FineWood:5,WolfPelt:5,IronNails:2."));
 
             _cfgSteamTimeToBuff = _saunaConfig.Bind(
                 "Gameplay",

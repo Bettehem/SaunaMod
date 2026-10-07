@@ -29,7 +29,7 @@ namespace SaunaMod
         private const string DefaultStoveRecipe = "Wood:10,Coal:5,Stone:40";
         private const string DefaultWhisksRecipe = "FineWood:5,BronzeNails:1";
         private const string DefaultBucketRecipe = "Iron:5,FineWood:10";
-        private const string DefaultTowelRackRecipe = "FineWood:5,WolfPelt:5";
+        private const string DefaultTowelRackRecipe = "FineWood:5,WolfPelt:5,IronNails:2";
 
         private const int SteamLayer = 30;
         private const int SmokeLayer = 31;

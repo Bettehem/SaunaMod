@@ -52,16 +52,16 @@ namespace SaunaMod
                 { "se_sauna_wellsteamed_tooltip",
                   "The heat stays with you.\nYou do not feel the cold." },
                 { "se_sauna_wellsteamed_tooltip_whisks",
-                  "The heat stays with you.\nYou do not feel the cold.\nSauna whisks make wetness harmless and unlock 15-minute warming." },
+                  "The heat stays with you.\nYou do not feel the cold.\nSauna whisks make wetness harmless." },
                 { "se_sauna_wellsteamed_tooltip_towels",
-                  "The heat stays with you.\nYou do not feel the cold.\nSauna whisks make wetness harmless and unlock 15-minute warming.\nWarm muscles climb steep slopes with less effort and slip less.\nFreezing hurts less." },
+                  "The heat stays with you.\nYou do not feel the cold.\nSauna whisks make wetness harmless.\nWarm muscles climb steep slopes with less effort and slip less.\nFreezing hurts less." },
                 { "se_sauna_wellsteamed_start", "You are well steamed" },
                 { "piece_sauna_wrisks", "Sauna whisks" },
                 { "piece_sauna_wrisks_desc", "A pair of birch sauna whisks. They help you steam properly and shrug off the discomfort of being wet." },
                 { "piece_sauna_bucket", "Sauna bucket with ladle" },
                 { "piece_sauna_bucket_desc", "Lets you throw more water on the stones and infuse the steam with mead, so you can enjoy its aroma and absorb its effects." },
-                { "piece_sauna_towel_rack", "Sauna towel rack" },
-                { "piece_sauna_towel_rack_desc", "Wolf-pelt towels on a wooden rail, a birch bundle on its hook and a shelf of folded cloth. No proper sauna is without one." }
+                { "piece_sauna_towel_rack", "Sauna towels" },
+                { "piece_sauna_towel_rack_desc", "A wooden rack with sauna towels made from wolf pelts. A proper steam loosens your muscles and makes steep slopes easier to climb." }
             });
 
             _loc.AddTranslation("Russian", new Dictionary<string, string>
@@ -95,16 +95,16 @@ namespace SaunaMod
                 { "se_sauna_wellsteamed_tooltip",
                   "Тепло держится в теле.\nХолод не берёт." },
                 { "se_sauna_wellsteamed_tooltip_whisks",
-                  "Тепло держится в теле.\nХолод не берёт.\nБанные веники снимают неудобства от сырости и открывают прогрев на 15 минут." },
+                  "Тепло держится в теле.\nХолод не берёт.\nБанные веники снимают неудобства от сырости." },
                 { "se_sauna_wellsteamed_tooltip_towels",
-                  "Тепло держится в теле.\nХолод не берёт.\nБанные веники снимают неудобства от сырости и открывают прогрев на 15 минут.\nРаспаренные мышцы легче держат на крутых склонах и меньше скользят.\nМороз ранит слабее." },
+                  "Тепло держится в теле.\nХолод не берёт.\nБанные веники снимают неудобства от сырости.\nРаспаренные мышцы легче держат на крутых склонах и меньше скользят.\nМороз ранит слабее." },
                 { "se_sauna_wellsteamed_start", "Хорошо пропарился" },
                 { "piece_sauna_wrisks", "Банные веники" },
                 { "piece_sauna_wrisks_desc", "Пара берёзовых веников. Помогают как следует пропариться и не страдать от сырости." },
                 { "piece_sauna_bucket", "Ведро с ковшом" },
                 { "piece_sauna_bucket_desc", "Позволяет поддать больше воды и подлить медовуху, чтобы насладиться ароматным паром и получить её защитный эффект." },
-                { "piece_sauna_towel_rack", "Вешалка для полотенец" },
-                { "piece_sauna_towel_rack_desc", "Полотенца из волчьей шкуры на деревянной перекладине, берёзовый веник на крючке и полка со сложенной тканью. Какая же баня без неё." }
+                { "piece_sauna_towel_rack", "Банные полотенца" },
+                { "piece_sauna_towel_rack_desc", "Деревянная вешалка с банными полотенцами из волчьих шкур. Хороший пар расслабляет мышцы и помогает легче взбираться по крутым склонам." }
             });
 
             _loc.AddTranslation("German", new Dictionary<string, string>
@@ -138,16 +138,16 @@ namespace SaunaMod
                 { "se_sauna_wellsteamed_tooltip",
                   "Die Wärme bleibt im Körper.\nKälte macht dir nichts aus." },
                 { "se_sauna_wellsteamed_tooltip_whisks",
-                  "Die Wärme bleibt im Körper.\nKälte macht dir nichts aus.\nBirkenquasten machen Nässe harmlos und schalten 15 Minuten Wärme frei." },
+                  "Die Wärme bleibt im Körper.\nKälte macht dir nichts aus.\nBirkenquasten machen Nässe harmlos." },
                 { "se_sauna_wellsteamed_tooltip_towels",
-                  "Die Wärme bleibt im Körper.\nKälte macht dir nichts aus.\nBirkenquasten machen Nässe harmlos und schalten 15 Minuten Wärme frei.\nWarme Muskeln erklimmen steile Hänge müheloser und rutschen weniger.\nFrost schadet dir weniger." },
+                  "Die Wärme bleibt im Körper.\nKälte macht dir nichts aus.\nBirkenquasten machen Nässe harmlos.\nWarme Muskeln erklimmen steile Hänge müheloser und rutschen weniger.\nFrost schadet dir weniger." },
                 { "se_sauna_wellsteamed_start", "Du bist gut durchgewärmt" },
                 { "piece_sauna_wrisks", "Saunabirkenquaste" },
                 { "piece_sauna_wrisks_desc", "Ein Paar Birkenquasten. Sie helfen dir, dich ordentlich durchzuwärmen, und Nässe macht dir nichts mehr aus." },
                 { "piece_sauna_bucket", "Saunaeimer mit Kelle" },
                 { "piece_sauna_bucket_desc", "Damit kannst du mehr Wasser aufgießen und Met hinzufügen, um den aromatischen Dampf zu genießen und seine Schutzwirkung aufzunehmen." },
-                { "piece_sauna_towel_rack", "Sauna-Handtuchhalter" },
-                { "piece_sauna_towel_rack_desc", "Handtücher aus Wolfsfell an einer Holzstange, ein Birkenbündel am Haken und ein Brett mit gefaltetem Stoff. Keine richtige Sauna kommt ohne aus." }
+                { "piece_sauna_towel_rack", "Saunahandtücher" },
+                { "piece_sauna_towel_rack_desc", "Ein Holzgestell mit Saunahandtüchern aus Wolfsfell. Ein gutes Dampfbad lockert die Muskeln und erleichtert das Erklimmen steiler Hänge." }
             });
 
             _loc.AddTranslation("Spanish", new Dictionary<string, string>
@@ -181,16 +181,16 @@ namespace SaunaMod
                 { "se_sauna_wellsteamed_tooltip",
                   "El calor permanece en tu cuerpo.\nEl frío no te afecta." },
                 { "se_sauna_wellsteamed_tooltip_whisks",
-                  "El calor permanece en tu cuerpo.\nEl frío no te afecta.\nLos ramos de sauna anulan las molestias de estar mojado y desbloquean 15 minutos de calor." },
+                  "El calor permanece en tu cuerpo.\nEl frío no te afecta.\nLos ramos de sauna anulan las molestias de estar mojado." },
                 { "se_sauna_wellsteamed_tooltip_towels",
-                  "El calor permanece en tu cuerpo.\nEl frío no te afecta.\nLos ramos de sauna anulan las molestias de estar mojado y desbloquean 15 minutos de calor.\nLos músculos calientes suben pendientes empinadas con menos esfuerzo y resbalan menos.\nLa congelación te daña menos." },
+                  "El calor permanece en tu cuerpo.\nEl frío no te afecta.\nLos ramos de sauna anulan las molestias de estar mojado.\nLos músculos calientes suben pendientes empinadas con menos esfuerzo y resbalan menos.\nLa congelación te daña menos." },
                 { "se_sauna_wellsteamed_start", "Has entrado bien en calor" },
                 { "piece_sauna_wrisks", "Ramos de abedul para sauna" },
                 { "piece_sauna_wrisks_desc", "Un par de ramos de abedul. Te ayudan a darte un buen baño de vapor y a no sufrir las molestias de estar mojado." },
                 { "piece_sauna_bucket", "Cubo de sauna con cucharón" },
                 { "piece_sauna_bucket_desc", "Permite echar más agua sobre las piedras y añadir hidromiel para disfrutar de su aroma en el vapor y absorber su efecto protector." },
-                { "piece_sauna_towel_rack", "Toallero de sauna" },
-                { "piece_sauna_towel_rack_desc", "Toallas de piel de lobo en una barra de madera, un manojo de abedul en su gancho y un estante con tela doblada. Ninguna sauna que se precie está sin él." }
+                { "piece_sauna_towel_rack", "Toallas de sauna" },
+                { "piece_sauna_towel_rack_desc", "Un soporte de madera con toallas de sauna hechas de piel de lobo. Un buen baño de vapor relaja los músculos y facilita subir pendientes empinadas." }
             });
 
             _loc.AddTranslation("Finnish", new Dictionary<string, string>
@@ -225,16 +225,16 @@ namespace SaunaMod
                 { "se_sauna_wellsteamed_tooltip",
                   "Lämpö pysyy kehossa.\nKylmä ei tunnu missään." },
                 { "se_sauna_wellsteamed_tooltip_whisks",
-                  "Lämpö pysyy kehossa.\nKylmä ei tunnu missään.\nKoivuvihdat poistavat märkyyden haitat ja avaavat 15 minuutin lämmön." },
+                  "Lämpö pysyy kehossa.\nKylmä ei tunnu missään.\nKoivuvihdat poistavat märkyyden haitat." },
                 { "se_sauna_wellsteamed_tooltip_towels",
-                  "Lämpö pysyy kehossa.\nKylmä ei tunnu missään.\nKoivuvihdat poistavat märkyyden haitat ja avaavat 15 minuutin lämmön.\nLämpimät lihakset kiipeävät jyrkkiä rinteitä kevyemmin ja liukuvat vähemmän.\nPaleltuminen satuttaa vähemmän." },
+                  "Lämpö pysyy kehossa.\nKylmä ei tunnu missään.\nKoivuvihdat poistavat märkyyden haitat.\nLämpimät lihakset kiipeävät jyrkkiä rinteitä kevyemmin ja liukuvat vähemmän.\nPaleltuminen satuttaa vähemmän." },
                 { "se_sauna_wellsteamed_start", "Olet lämmin läpikotaisin" },
                 { "piece_sauna_wrisks", "Koivuvihdat" },
                 { "piece_sauna_wrisks_desc", "Pari koivuvihtaa. Niillä saat kunnon löylyt, eikä märkyys enää haittaa." },
                 { "piece_sauna_bucket", "Saunakiulu ja kauha" },
                 { "piece_sauna_bucket_desc", "Tällä saat heitettyä enemmän löylyä ja voit lisätä simaa, jolloin sen tuoksu ja suojaava vaikutus kulkevat höyryn mukana." },
-                { "piece_sauna_towel_rack", "Saunan pyyheteline" },
-                { "piece_sauna_towel_rack_desc", "Sudennahkapyyhkeitä puisessa orressa, koivuvihta koukussa ja hylly taiteltua kangasta. Kunnon saunasta sellainen ei puutu." }
+                { "piece_sauna_towel_rack", "Saunapyyhkeet" },
+                { "piece_sauna_towel_rack_desc", "Puinen teline, jossa on sudennahasta tehtyjä saunapyyhkeitä. Kunnon löylyt rentouttavat lihakset ja helpottavat jyrkkien rinteiden kiipeämistä." }
             });
         }
     }
