@@ -31,6 +31,9 @@ namespace SaunaMod
         /// Tier 2 makes wetness harmless; tier 4 adds the climbing and freezing bonuses (TowelRackTuning).
         public int SaunaTier = 1;
 
+        // Captured before ForceJump clears ground contact; valid only during that call.
+        internal float JumpGroundSlope = -1f;
+
         public static float WetStaminaMultiplier = 1f;
         public static float WetHealthMultiplier = 1f;
         public static float WetEitrMultiplier = 1f;
@@ -87,10 +90,21 @@ namespace SaunaMod
         {
             base.ModifyJumpStaminaUsage(baseStaminaUse, ref staminaUse);
 
-            if (HasClimbingBonus() && TowelRackTuning.GroundSlope(m_character) >= TowelRackTuning.ClimbMinSlope)
+            if (HasClimbingBonus() && JumpGroundSlope >= TowelRackTuning.ClimbMinSlope)
             {
                 staminaUse -= baseStaminaUse * (1f - Mathf.Clamp01(TowelRackTuning.ClimbStaminaMultiplier));
             }
+        }
+
+        public override string GetTooltipString()
+        {
+            // Config changes can disable the bonuses while this effect is already active.
+            m_tooltip = SaunaTier >= TowelRackTuning.SaunaTier && TowelRackTuning.Enabled != 0
+                ? "$se_sauna_wellsteamed_tooltip_towels"
+                : SaunaTier >= 2
+                    ? "$se_sauna_wellsteamed_tooltip_whisks"
+                    : "$se_sauna_wellsteamed_tooltip";
+            return base.GetTooltipString();
         }
 
         private bool HasClimbingBonus()

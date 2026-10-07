@@ -55,6 +55,39 @@ namespace SaunaMod
         }
     }
 
+    /// Capture the takeoff slope before vanilla ForceJump resets ground contact and calls OnJump.
+    [HarmonyPatch(typeof(Character), nameof(Character.ForceJump))]
+    internal static class WellSteamedJumpPatch
+    {
+        internal struct JumpState
+        {
+            public SE_WellSteamed Effect;
+            public float PreviousSlope;
+        }
+
+        private static void Prefix(Character __instance, bool effects, out JumpState __state)
+        {
+            __state = default;
+            SE_WellSteamed effect = effects ? TowelRackTuning.ActiveFor(__instance) : null;
+            if (effect == null) return;
+
+            __state.Effect = effect;
+            __state.PreviousSlope = effect.JumpGroundSlope;
+            effect.JumpGroundSlope = __instance.IsOnGround()
+                ? TowelRackTuning.GroundSlope(__instance)
+                : -1f;
+        }
+
+        private static void Finalizer(JumpState __state)
+        {
+            // Restore even if another patch or vanilla code throws during the jump.
+            if (__state.Effect != null)
+            {
+                __state.Effect.JumpGroundSlope = __state.PreviousSlope;
+            }
+        }
+    }
+
     /// Tier 4 Well steamed: Freezing ticks hurt less. Freezing deals its damage as a HitData of
     /// type Freezing through Character.Damage, which ends in RPC_Damage on the player's owner.
     [HarmonyPatch(typeof(Character), nameof(Character.RPC_Damage))]

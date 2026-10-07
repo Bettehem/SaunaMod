@@ -45,6 +45,9 @@ namespace SaunaMod
                     baseRenderer.enabled = false;
                 }
 
+                // Empty CustomPiece prefabs have no durability component to receive the wall profile.
+                rack.PiecePrefab.AddComponent<WearNTear>();
+
                 // The rack hangs on a wall like the whisks; +X points away from the wall.
                 ApplyWallMountedBehavior(rack.PiecePrefab);
 
@@ -72,6 +75,8 @@ namespace SaunaMod
                 BoxCollider shelfCollider = visualRoot.AddComponent<BoxCollider>();
                 shelfCollider.center = new UnityEngine.Vector3(0.39f, -0.58f, 0.5f);
                 shelfCollider.size = new UnityEngine.Vector3(0.52f, 0.26f, 0.69f);
+
+                SetLayerRecursive(visualRoot, LayerMask.NameToLayer("piece"));
 
                 Jotunn.Logger.LogInfo(
                     $"sauna_towel_rack visual ready: parts={parts}, " +

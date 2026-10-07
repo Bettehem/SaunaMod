@@ -45,7 +45,7 @@ namespace SaunaMod
         /// Angle of the ground under the character, degrees; 0 in the air.
         public static float GroundSlope(Character character)
         {
-            if (!character.IsOnGround())
+            if (character == null || !character.IsOnGround())
             {
                 return 0f;
             }

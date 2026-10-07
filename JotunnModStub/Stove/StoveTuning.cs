@@ -72,21 +72,19 @@ namespace SaunaMod
             Fast
         }
 
-        /// Heating and pour cost for the chosen preset (cfg Stove.HeatingSpeed).
-        /// Fast: the stones heat in 3 min 20 s instead of 5 min and give 4 pours instead of 3.
-        /// Cooling is a separate setting (cfg Stove.CoolPerMinute).
+        /// Heating rate for the chosen preset (cfg Stove.HeatingSpeed).
+        /// Fast: the stones heat in 3 min 20 s instead of 5 min.
+        /// Pour cost (cfg Stove.PourCost) and cooling (cfg Stove.CoolPerMinute) are separate settings.
         public static void ApplyHeatingSpeed(HeatingSpeed speed)
         {
             switch (speed)
             {
                 case HeatingSpeed.Fast:
                     HeatPerMinute = 30f;
-                    PourHeatCost = 15f;
                     break;
 
                 default:
                     HeatPerMinute = 20f;
-                    PourHeatCost = 20f;
                     break;
             }
         }

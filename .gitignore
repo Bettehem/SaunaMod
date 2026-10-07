@@ -11,6 +11,7 @@
 Environment.props
 
 # Build and release output
+artifacts/
 Packages/
 *.zip
 *.nupkg
