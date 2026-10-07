@@ -12,30 +12,11 @@ namespace SaunaMod
     {
         private const string TowelRackVisualRootName = "sauna_towel_rack_visual_root";
 
-        /// Rest positions of the four lox-rib hooks on the whisk holder. Every hook is the full
-        /// set of five LoxRibs_Destruction fragments with the same rotation and scale.
-        private static readonly UnityEngine.Vector3[] TowelRackRibHooks =
-        {
-            new UnityEngine.Vector3(0.0657f, 0.0688f, 0.6561f),
-            new UnityEngine.Vector3(0.0557f, 0.101f, 0.6442f),
-            new UnityEngine.Vector3(0.0633f, 0.0456f, 0.6437f),
-            new UnityEngine.Vector3(0.0506f, 0.1236f, 0.6564f)
-        };
-
-        private static readonly string[] TowelRackRibFragments =
-        {
-            "LoxRibs_destruction_Cube.033",
-            "LoxRibs_destruction.001_Cube.034",
-            "LoxRibs_destruction.002_Cube.035",
-            "LoxRibs_destruction.003_Cube.036",
-            "LoxRibs_destruction.004_Cube.037"
-        };
-
         /// <summary>
         /// Wall-mounted towel rack: wolf-pelt towels on a wooden spear rail held by two iron nails,
-        /// a birch bundle on a lox-rib holder and a shelf with folded cloth.
+        /// a birch bundle on a wooden holder and a shelf with folded cloth.
         /// Built directly from vanilla meshes, like the whisks, using the transforms of the
-        /// "wolf towel" object in the Unity kitbash scene (SaunaWhisk.unity).
+        /// latest "wolf towel" kitbash dump.
         /// </summary>
         private void AddSaunaTowelRack()
         {
@@ -128,7 +109,7 @@ namespace SaunaMod
         {
             int parts = 0;
 
-            Material rugWolf = FindPrefabMaterial("rug_wolf", "rug_wolf");
+            Material rugWolf = CreateOpaqueTowelMaterial();
             Material ironpit = FindPrefabMaterial("Ironpit", "HildirIronpit_m");
             Material cartWood = FindPrefabMaterial("Cart", "cart_wood");
 
@@ -150,23 +131,23 @@ namespace SaunaMod
                 UnityEngine.Vector3.zero, UnityEngine.Quaternion.identity, UnityEngine.Vector3.one) != null) parts++;
 
             if (AddFoldedClothVisual(root, rugWolf,
-                new UnityEngine.Vector3(0.076284f, -1.305468f, -0.17726f)) != null) parts++;
+                new UnityEngine.Vector3(0.071f, -1.301f, -0.17726f)) != null) parts++;
 
             // ---- rail: wooden spear on two iron nails ----
 
             GameObject spear = new GameObject("WoodenSpear (1)");
             spear.transform.SetParent(root, false);
-            spear.transform.localPosition = new UnityEngine.Vector3(0.068284f, 0.460437f, -0.706585f);
-            spear.transform.localRotation = UnityEngine.Quaternion.Euler(89.73607f, 0f, 0f);
+            spear.transform.localPosition = new UnityEngine.Vector3(0.068284f, 0.461796f, -0.70659f);
+            spear.transform.localRotation = UnityEngine.Quaternion.Euler(89.85196f, 0f, 0f);
             spear.transform.localScale = new UnityEngine.Vector3(1f, 0.71179f, 1f);
             if (AddTowelRackPart(spear.transform, "default",
                 new[] { new PrefabMeshSource("SpearWood", "attach/default") }, null,
                 UnityEngine.Vector3.zero, UnityEngine.Quaternion.identity, UnityEngine.Vector3.one) != null) parts++;
 
             if (AddTowelRackNail(root, "Cube.012_Cube.010_Cube.012_Cube.010 (3)", ironpit,
-                new UnityEngine.Vector3(0.233284f, 0.205532f, -0.963374f)) != null) parts++;
+                new UnityEngine.Vector3(0.2328f, 0.2076f, -0.9617f)) != null) parts++;
             if (AddTowelRackNail(root, "Cube.012_Cube.010_Cube.012_Cube.010 (4)", ironpit,
-                new UnityEngine.Vector3(0.23069f, 0.214721f, 0.906628f)) != null) parts++;
+                new UnityEngine.Vector3(0.2298f, 0.2184f, 0.9095f)) != null) parts++;
 
             // ---- shelf: one plank of a quarter wood wall ----
 
@@ -175,7 +156,7 @@ namespace SaunaMod
             GameObject shelf = new GameObject("wood_wall_quarter (1)");
             shelf.transform.SetParent(root, false);
             shelf.transform.localPosition = new UnityEngine.Vector3(0.086639f, -0.746563f, 1.197343f);
-            shelf.transform.localRotation = new UnityEngine.Quaternion(0.4951907f, 0.5040608f, 0.504776f, -0.4958932f);
+            shelf.transform.localRotation = UnityEngine.Quaternion.Euler(270.0791f, 269.064f, 0f);
             shelf.transform.localScale = new UnityEngine.Vector3(0.65023f, 0.667516f, 1f);
             if (AddTowelRackPart(shelf.transform, "mesh",
                 new[] { new PrefabMeshSource("wood_wall_quarter", "New/mesh") }, null,
@@ -183,7 +164,7 @@ namespace SaunaMod
                 UnityEngine.Quaternion.Euler(0f, 180f, 0f),
                 new UnityEngine.Vector3(1f, 1f, 0.23484f)) != null) parts++;
 
-            // ---- whisk holder: wooden post and peg with lox-rib hooks ----
+            // ---- whisk holder: wooden post and peg ----
 
             if (AddTowelRackPrimitive(root, "Cube (1)", PrimitiveType.Cube, cartWood,
                 new UnityEngine.Vector3(0.0728f, 0.2804f, 0.6543f),
@@ -193,22 +174,6 @@ namespace SaunaMod
                 new UnityEngine.Vector3(0.0762f, 0.0924f, 0.6544f),
                 UnityEngine.Quaternion.Euler(0f, 0f, 271.5904f),
                 new UnityEngine.Vector3(0.237195f, -0.013765f, 0.136465f)) != null) parts++;
-
-            UnityEngine.Quaternion ribRotation = UnityEngine.Quaternion.Euler(278.5117f, 90.64911f, 180f);
-            UnityEngine.Vector3 ribScale = new UnityEngine.Vector3(0.033239f, 0.028852f, 0.052203f);
-            for (int hook = 0; hook < TowelRackRibHooks.Length; hook++)
-            {
-                foreach (string fragment in TowelRackRibFragments)
-                {
-                    PrefabMeshSource[] sources =
-                    {
-                        new PrefabMeshSource("lox_ribs", "LoxRibs_Destruction/" + fragment),
-                        new PrefabMeshSource("goblin_woodwall_2m_ribs", "LoxRibs_Destruction/" + fragment)
-                    };
-                    if (AddTowelRackPart(root, $"{fragment} hook{hook}", sources, null,
-                        TowelRackRibHooks[hook], ribRotation, ribScale) != null) parts++;
-                }
-            }
 
             // ---- birch bundle: the same vanilla parts as the sauna whisks ----
 
@@ -230,11 +195,13 @@ namespace SaunaMod
 
             // Leather wraps around the bundle and its hanging loop.
             if (AddPrefabPathVisual(root, "hood (4)", "HelmetSweatBand", "attach/hood",
-                new UnityEngine.Vector3(0.072f, 0.463f, 0.645f), UnityEngine.Quaternion.Euler(85.49467f, 89.03674f, 103.3685f), new UnityEngine.Vector3(0.263562f, 0.293313f, 0.764842f)) != null) parts++;
+                new UnityEngine.Vector3(0.0703f, 0.4425f, 0.6471f), UnityEngine.Quaternion.Euler(88.79245f, 84.28622f, 83.51717f), new UnityEngine.Vector3(0.263562f, 0.293313f, 0.68552f)) != null) parts++;
             if (AddPrefabPathVisual(root, "hood (5)", "HelmetSweatBand", "attach/hood",
                 new UnityEngine.Vector3(0.123067f, 0.293359f, 0.850935f), UnityEngine.Quaternion.Euler(13.62179f, 286.693f, 176.1621f), new UnityEngine.Vector3(0.26362f, 0.29359f, 0.20807f)) != null) parts++;
             if (AddPrefabPathVisual(root, "hood (6)", "HelmetSweatBand", "attach/hood",
-                new UnityEngine.Vector3(0.079446f, 0.475234f, 0.849648f), UnityEngine.Quaternion.Euler(78.49215f, 126.2727f, 33.03559f), new UnityEngine.Vector3(0.16615f, 0.30113f, 0.13673f)) != null) parts++;
+                new UnityEngine.Vector3(0.065727f, 0.48118f, 0.84192f), UnityEngine.Quaternion.Euler(80.0238f, 92.42675f, 90.36179f), new UnityEngine.Vector3(0.284849f, 0.464282f, 0.224132f)) != null) parts++;
+            if (AddPrefabPathVisual(root, "hood (11)", "HelmetSweatBand", "attach/hood",
+                new UnityEngine.Vector3(0.06834f, 0.4831f, 0.64368f), UnityEngine.Quaternion.Euler(80.0238f, 92.42675f, 90.36179f), new UnityEngine.Vector3(0.284849f, 0.464282f, 0.224132f)) != null) parts++;
             if (AddPrefabPathVisual(root, "hood (7)", "HelmetSweatBand", "attach/hood",
                 new UnityEngine.Vector3(0.104475f, 0.378261f, 0.844907f), UnityEngine.Quaternion.Euler(8.613946f, 265.5535f, 269.5052f), new UnityEngine.Vector3(1.04777f, 0.29993f, 0.05108f)) != null) parts++;
             if (AddPrefabPathVisual(root, "hood (8)", "HelmetSweatBand", "attach/hood",
@@ -421,6 +388,31 @@ namespace SaunaMod
             mr.receiveShadows = receiveShadows;
 
             return go;
+        }
+
+        /// Keep the wolf texture and lighting, but render the entire cloth mesh regardless of texture alpha.
+        private static Material CreateOpaqueTowelMaterial()
+        {
+            Material source = FindPrefabMaterial("rug_wolf", "rug_wolf");
+            if (source == null)
+            {
+                return null;
+            }
+
+            Material material = new Material(source) { name = "sauna_towel_wolf_opaque" };
+            // The game's rug shader can perform alpha clipping without the Standard shader keyword.
+            // A zero threshold also keeps texels with zero alpha when the shader uses clip(alpha - cutoff).
+            if (material.HasProperty("_Cutoff")) material.SetFloat("_Cutoff", 0f);
+            if (material.HasProperty("_Mode")) material.SetFloat("_Mode", 0f);
+            if (material.HasProperty("_SrcBlend")) material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
+            if (material.HasProperty("_DstBlend")) material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.Zero);
+            if (material.HasProperty("_ZWrite")) material.SetFloat("_ZWrite", 1f);
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.DisableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.SetOverrideTag("RenderType", "Opaque");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Geometry;
+            return material;
         }
 
         /// A material of a specific vanilla prefab, found by name. The material is only referenced, never changed.
