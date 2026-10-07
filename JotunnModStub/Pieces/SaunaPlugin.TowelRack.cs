@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Nekitker
 using Jotunn.Configs;
 using Jotunn.Entities;
@@ -27,7 +27,7 @@ namespace SaunaMod
                     Name = "$piece_sauna_towel_rack",
                     Description = "$piece_sauna_towel_rack_desc",
                     PieceTable = PieceTables.Hammer,
-                    Category = PieceCategories.Furniture,
+                    Category = SaunaPieceCategory,
                     CraftingStation = CraftingStations.Workbench,
                     Requirements = ParseRecipeConfig(
                         TowelRackRecipeValue,

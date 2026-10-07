@@ -25,6 +25,7 @@ namespace SaunaMod
         public const string PluginName = "SaunaMod";
         public const string PluginVersion = "2.2.0";
         private const string ConfigFileName = "nekitker.saunamod.cfg";
+        private const string SaunaPieceCategory = "Sauna";
 
         private const string DefaultStoveRecipe = "Wood:10,Coal:5,Stone:40";
         private const string DefaultWhisksRecipe = "FineWood:5,BronzeNails:1";

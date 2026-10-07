@@ -23,6 +23,7 @@ namespace SaunaMod
             PrefabManager.OnVanillaPrefabsAvailable -= OnVanillaPrefabsAvailable;
 
             CreateStatusEffects();
+            PieceManager.Instance.AddPieceCategory(SaunaPieceCategory);
             AddSaunaStove();
             AddSaunaWrisks();
             AddSaunaBucket();

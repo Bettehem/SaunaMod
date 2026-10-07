@@ -31,7 +31,7 @@ namespace SaunaMod
                     Name = "$piece_sauna_bucket",
                     Description = "$piece_sauna_bucket_desc",
                     PieceTable = PieceTables.Hammer,
-                    Category = PieceCategories.Furniture,
+                    Category = SaunaPieceCategory,
                     CraftingStation = CraftingStations.Workbench,
                     Requirements = ParseRecipeConfig(
                         BucketRecipeValue,

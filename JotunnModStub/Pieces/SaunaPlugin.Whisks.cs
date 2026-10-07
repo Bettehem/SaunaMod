@@ -32,7 +32,7 @@ namespace SaunaMod
                     Name = "$piece_sauna_wrisks",
                     Description = "$piece_sauna_wrisks_desc",
                     PieceTable = PieceTables.Hammer,
-                    Category = PieceCategories.Furniture,
+                    Category = SaunaPieceCategory,
                     CraftingStation = CraftingStations.Workbench,
                     Requirements = ParseRecipeConfig(
                         WhisksRecipeValue,

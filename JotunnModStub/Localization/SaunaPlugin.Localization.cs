@@ -22,6 +22,7 @@ namespace SaunaMod
         {
             _loc.AddTranslation("English", new Dictionary<string, string>
             {
+                { "jotunn_cat_sauna", "Sauna" },
                 { "piece_sauna_stove", "Sauna stove" },
                 { "piece_sauna_stove_desc", "A stone sauna stove. Pour on water and enjoy a proper steam." },
                 { "piece_sauna_pour", "Pour water" },
@@ -66,6 +67,7 @@ namespace SaunaMod
 
             _loc.AddTranslation("Russian", new Dictionary<string, string>
             {
+                { "jotunn_cat_sauna", "Баня" },
                 { "piece_sauna_stove", "Банная печь" },
                 { "piece_sauna_stove_desc", "Каменная банная печь. Поддай пару и как следует пропарься." },
                 { "piece_sauna_pour", "Поддать пару" },
@@ -109,6 +111,7 @@ namespace SaunaMod
 
             _loc.AddTranslation("German", new Dictionary<string, string>
             {
+                { "jotunn_cat_sauna", "Sauna" },
                 { "piece_sauna_stove", "Saunaofen" },
                 { "piece_sauna_stove_desc", "Ein steinerner Saunaofen. Mach einen Aufguss und schwitz dich ordentlich aus." },
                 { "piece_sauna_pour", "Aufguss machen" },
@@ -152,6 +155,7 @@ namespace SaunaMod
 
             _loc.AddTranslation("Spanish", new Dictionary<string, string>
             {
+                { "jotunn_cat_sauna", "Sauna" },
                 { "piece_sauna_stove", "Estufa de sauna" },
                 { "piece_sauna_stove_desc", "Una estufa de sauna de piedra. Echa agua sobre las piedras y date un buen baño de vapor." },
                 { "piece_sauna_pour", "Echar agua" },
@@ -195,6 +199,7 @@ namespace SaunaMod
 
             _loc.AddTranslation("Finnish", new Dictionary<string, string>
             {
+                { "jotunn_cat_sauna", "Sauna" },
                 { "piece_sauna_stove", "Kiuas" },
                 { "piece_sauna_stove_desc", "Kivinen kiuas. Heitä löylyä ja nauti kunnon saunasta." },
                 { "piece_sauna_pour", "Heitä löylyä" },
